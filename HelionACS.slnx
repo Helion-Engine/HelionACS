@@ -1,0 +1,9 @@
+<Solution>
+  <Folder Name="/src/" />
+  <Folder Name="/src/cs/">
+    <Project Path="src/cs/HelionACS.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/Tests.csproj" />
+  </Folder>
+</Solution>

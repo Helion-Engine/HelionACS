@@ -1,0 +1,30 @@
+#include "zcommon.acs"
+
+script 1 OPEN {
+    Delay(1);
+    Print(s:"Hi");
+    Delay(5);
+    Print(s:"Hi again!");
+    Print(i:4);
+}
+
+script 2 (void) {
+    Print(s:"Hello from script 2");
+}
+script "Named" (void) {
+    Print(s:"Hello from a named script");
+}
+
+script "ReturnsResult" (void) {
+    SetResultValue(500);
+}
+
+script "UsesALineSpecial" (void) {
+    int value = Door_Open(10, 32);
+    Print(s:"Return value: ", i:value);
+}
+script "UsesTagWait" (void) {
+    Print(s:"Pre-wait");
+    TagWait(10);
+    Print(s:"Post-wait");
+}
