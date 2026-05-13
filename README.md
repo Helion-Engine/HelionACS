@@ -11,13 +11,13 @@ itself.
 
 Kinda TODO as it needs to be made more cross-platform, but on Linux it should
 be something like this. You'll need `dotnet`, `CMake`, `ninja`, and
-`ClangSharpPInvokeGenerator` (which can be installed via `dotnet tool` locally
-to the project, with `dotnet-tools.json`). Then run:
+`ClangSharpPInvokeGenerator` (which can be installed via `dotnet tool restore`
+locally to the project, with `dotnet-tools.json`). Then run:
 
 ```
-mkdir -p ./bin/Native-Debug
-cmake -B ./bin/Native-Debug -G Ninja
-cmake --build ./bin/Native-Debug
+mkdir -p ./build-native/linux-x64
+cmake -B ./build-native/linux-x64 -G Ninja -DCMAKE_BUILD_TYPE=RelWithDebInfo
+cmake --build ./build-native/linux-x64
 dotnet tool run ClangSharpPInvokeGenerator -c multi-file generate-helper-types --file ./src/cxx/HelionACS.hpp -n HelionACS.Interop --libraryPath HelionACS-native -o ./src/cs/Generated/
 dotnet build
 ```

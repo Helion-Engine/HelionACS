@@ -33,4 +33,8 @@ add_library(HelionACS-native SHARED
 target_include_directories(HelionACS-native PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}
 )
-target_link_options(HelionACS-native PRIVATE "-Wl,--no-undefined")
+if (WIN32)
+    set_target_properties(HelionACS-native PROPERTIES
+        PREFIX ""
+    )
+endif()

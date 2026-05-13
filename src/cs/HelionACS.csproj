@@ -9,8 +9,32 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <None Include="../../bin/Native-Debug/libHelionACS-native.so"
+    <None Include="../../build-native/linux-x64/libHelionACS-native.so"
+          Condition="Exists('../../build-native/linux-x64')"
+          Pack="false"
           CopyToOutputDirectory="PreserveNewest" />
+    <None Include="../../build-native/osx-x64/libHelionACS-native.dylib"
+          Condition="Exists('../../build-native/osx-x64')"
+          Pack="false"
+          CopyToOutputDirectory="PreserveNewest" />
+    <None Include="../../build-native/win-x64/HelionACS-native.dll"
+          Condition="Exists('../../build-native/win-x64')"
+          Pack="false"
+          CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="../../build-native/linux-x64/libHelionACS-native.so"
+          Pack="true"
+          PackagePath="runtimes/linux-x64/native/" />
+
+    <None Include="../../build-native/osx-x64/libHelionACS-native.dylib"
+          Pack="true"
+          PackagePath="runtimes/osx-x64/native/" />
+
+    <None Include="../../build-native/win-x64/HelionACS-native.dll"
+          Pack="true"
+          PackagePath="runtimes/win-x64/native/" />
   </ItemGroup>
 
 </Project>
