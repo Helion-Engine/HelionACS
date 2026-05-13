@@ -1,5 +1,9 @@
 name: build-test-pack
 
+permissions:
+  contents: read
+  packages: write
+
 on:
   push:
     branches:
@@ -136,6 +140,10 @@ jobs:
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: "10.0.x"
+      - name: Set version
+        run: |
+          SHORT_SHA=$(echo ${{ github.sha }} | cut -c1-7)
+          echo "VERSION=1.0.0-ci.$SHORT_SHA" >> $GITHUB_ENV
       - name: Pack NuGet
         run: dotnet pack src/cs/HelionACS.csproj -c Release -o out
       - name: Upload NuGet package
@@ -143,3 +151,9 @@ jobs:
         with:
           name: nupkg
           path: out/*.nupkg
+      - name: Push NuGet package
+        run: |
+          dotnet nuget push "out/*.nupkg" \
+            --source "https://nuget.pkg.github.com/${{ github.repository_owner }}/index.json" \
+            --api-key ${{ secrets.GITHUB_TOKEN }} \
+            --skip-duplicate
