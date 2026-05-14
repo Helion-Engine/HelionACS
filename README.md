@@ -22,6 +22,12 @@ dotnet tool run ClangSharpPInvokeGenerator -c multi-file generate-helper-types -
 dotnet build
 ```
 
+Windows Release
+```
+cmake -B build -G "Visual Studio 17 2022" -A x64
+cmake --build build --config Release
+```
+
 ## Testing
 
 You'll need `acc`, the ACS compiler. Unit tests are used for engine-intended
