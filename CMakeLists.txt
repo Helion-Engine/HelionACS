@@ -30,6 +30,8 @@ add_library(HelionACS-native SHARED
     src/cxx/ACSVM/ACSVM/Tracer.cpp
 )
 
+target_compile_definitions(HelionACS-native PRIVATE HELIONACS_BUILD)
+
 target_include_directories(HelionACS-native PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}
 )
