@@ -58,6 +58,13 @@ public readonly ref struct ThreadHandle
             Interop.Methods.PushThreadStack(m_ptr, value);
         }
     }
+
+    public unsafe string GetString(uint index)
+    {
+        sbyte* str;
+        uint length = Interop.Methods.GetString(m_ptr, index, &str);
+        return Marshal.PtrToStringUTF8((nint)str, (int)length);
+    }
 }
 
 public abstract class Executor {

@@ -61,3 +61,4 @@ HELIONACS_API void GetThreadPrintBuffer(ACSVM::Thread* thread, const char** buf,
 HELIONACS_API void* GetThreadContext(ACSVM::Thread* thread);
 HELIONACS_API void* GetThreadThreadInfoData(ACSVM::Thread* thread);
 HELIONACS_API void PushThreadStack(ACSVM::Thread* thread, ACSVM::Word value);
+HELIONACS_API ACSVM::Word GetString(ACSVM::Thread* thread, ACSVM::Word index, const char** str);

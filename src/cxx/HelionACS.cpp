@@ -289,3 +289,9 @@ void* GetThreadThreadInfoData(ACSVM::Thread* thread) {
 void PushThreadStack(ACSVM::Thread *thread, ACSVM::Word value) {
     thread->dataStk.push(value);
 }
+
+ACSVM::Word GetString(ACSVM::Thread* thread, ACSVM::Word index, const char** str) {
+    auto mapString = thread->scopeMap->getString(index);
+    *str = mapString->str;
+    return mapString->len;
+}
