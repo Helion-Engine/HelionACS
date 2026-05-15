@@ -106,6 +106,8 @@ jobs:
             rid: win-x64
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
       - name: Download generated sources
         uses: actions/download-artifact@v4
         with:
@@ -130,9 +132,11 @@ jobs:
   pack:
     runs-on: ubuntu-latest
     needs: test
-    if: github.event_name == 'push'
+    if: github.event_name == 'push' 
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
       - name: Download generated sources
         uses: actions/download-artifact@v4
         with:
@@ -151,8 +155,14 @@ jobs:
       - name: Set version
         run: |
           SHORT_SHA=$(echo ${{ github.sha }} | cut -c1-7)
+          COMMIT_COUNT=$(git rev-list --count HEAD)
+          REF_NAME=$(echo ${{ github.ref_name }} | tr '[:upper:]' '[:lower:]' | sed 's#[^a-zA-Z0-9-]#-#g')
           echo 'PACKAGE_ID="${{ github.repository_owner }}.HelionACS"' >> $GITHUB_ENV
-          echo "VERSION=0.1.0-ci.$SHORT_SHA" >> $GITHUB_ENV
+          if [ "$REF_NAME" = "main" ]; then
+            echo "VERSION=0.1.1-pre.$COMMIT_COUNT+$SHORT_SHA" >> $GITHUB_ENV
+          else
+            echo "VERSION=0.1.1-pre-$REF_NAME.$COMMIT_COUNT+$SHORT_SHA" >> $GITHUB_ENV
+          fi
       - name: Pack NuGet
         run: |
           dotnet pack src/cs/HelionACS.csproj -c Release -o out \
@@ -163,7 +173,18 @@ jobs:
         with:
           name: nupkg
           path: out/*.nupkg
-      - name: Push NuGet package
+
+  publish:
+    runs-on: ubuntu-latest
+    needs: pack
+    if: (github.event_name == 'push') && (github.ref == 'refs/heads/main')
+    steps:
+      - name: Download generated sources
+        uses: actions/download-artifact@v4
+        with:
+          name: nupkg
+          path: out
+      - name: Publish to Github NuGet
         run: |
           dotnet nuget push "out/*.nupkg" \
             --source "https://nuget.pkg.github.com/${{ github.repository_owner }}/index.json" \
