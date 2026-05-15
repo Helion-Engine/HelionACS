@@ -10,62 +10,60 @@
 #include "ACSVM/ACSVM/Action.hpp"
 #include "ACSVM/ACSVM/Serial.hpp"
 #include <cstddef>
+#include <optional>
 #include <span>
 #include <string_view>
 
-class VoidPointerThreadInfo : public ACSVM::ThreadInfo {
+class IndexThreadInfo : public ACSVM::ThreadInfo {
 public:
-    void* data;
+    void* context;
+    std::int32_t index;
     FreeCSThreadInfoData freeCallback;
-    VoidPointerThreadInfo(CSThreadInfo ti) : data(ti.data), freeCallback(ti.freeCallback) {}
+    IndexThreadInfo(void* context, CSThreadInfo ti) : context(context), index(ti.index), freeCallback(ti.freeCallback) {}
 
-    ~VoidPointerThreadInfo() override {
-        this->freeCallback(this->data);
+    ~IndexThreadInfo() override {
+        this->freeCallback(this->context, this->index);
     }
 };
 
 class ThreadImpl : public ACSVM::Thread {
 private:
-    const VoidPointerThreadInfo* info = nullptr;
-    const Callbacks* callbacks;
+    std::optional<IndexThreadInfo> info;
 
 public:
     void* executorContext;
 
-    explicit ThreadImpl(ACSVM::Environment* env, Callbacks* callbacks, void* executorContext) : ACSVM::Thread(env), info(nullptr), callbacks(callbacks), executorContext(executorContext) {}
+    explicit ThreadImpl(ACSVM::Environment* env, void* executorContext) : ACSVM::Thread(env), info(), executorContext(executorContext) {}
 
     void start(ACSVM::Script *script, ACSVM::MapScope *map, const ACSVM::ThreadInfo *info, const ACSVM::Word *argV, ACSVM::Word argC) override {
         ACSVM::Thread::start(script, map, info, argV, argC);
         if (info) {
-            this->info = static_cast<const VoidPointerThreadInfo*>(info);
+            this->info = *static_cast<const IndexThreadInfo*>(info);
         }
     }
     void stop() override {
         ACSVM::Thread::stop();
 
-        delete this->info; this->info = nullptr;
+        this->info = std::nullopt;
     }
     const ACSVM::ThreadInfo* getInfo() const override {
-        return this->info;
+        return &this->info.value();
     }
     void loadState(ACSVM::Serial &in) override {
         ACSVM::Thread::loadState(in);
-        auto s = ThreadInfoSerialized {};
-        s.activator = ACSVM::ReadVLN<int32_t>(in);
-        this->callbacks->deserializeThreadInfoCallback(executorContext, info->data, s);
+        info->index = ACSVM::ReadVLN<int32_t>(in);
     }
     void saveState(ACSVM::Serial &out) const override {
         ACSVM::Thread::saveState(out);
-        auto s = this->callbacks->serializeThreadInfoCallback(executorContext, info->data);
-        ACSVM::WriteVLN<int32_t>(out, s.activator);
+        ACSVM::WriteVLN<int32_t>(out, info->index);
     }
 };
 
 class Env : public ACSVM::Environment {
 private:
     Callbacks callbacks;
-    void* executorContext;
 public:
+    void* executorContext;
     Env(Callbacks callbacks, void* executorContext)
         : callbacks(callbacks), executorContext(executorContext) {}
 
@@ -80,7 +78,7 @@ public:
         return this->callbacks.checkTagCallback(this->executorContext, type, tag);
     }
     ACSVM::Thread * allocThread() override {
-        return new ThreadImpl(this, &this->callbacks, this->executorContext);
+        return new ThreadImpl(this, this->executorContext);
     }
 };
 
@@ -145,7 +143,7 @@ public:
         auto actualInfo = ACSVM::MapScope::ScriptStartInfo {};
         actualInfo.argV = argV;
         actualInfo.argC = argC;
-        auto threadInfo = new VoidPointerThreadInfo(info);
+        auto threadInfo = new IndexThreadInfo(env.executorContext, info);
         actualInfo.info = threadInfo;
         return actualInfo;
     }
@@ -292,8 +290,8 @@ void GetThreadPrintBuffer(ACSVM::Thread* thread, const char** buf, std::size_t* 
 void* GetThreadContext(ACSVM::Thread* thread) {
     return static_cast<const ThreadImpl*>(thread)->executorContext;
 }
-void* GetThreadThreadInfoData(ACSVM::Thread* thread) {
-    return static_cast<const VoidPointerThreadInfo*>(thread->getInfo())->data;
+std::int32_t GetThreadThreadInfoIndex(ACSVM::Thread* thread) {
+    return static_cast<const IndexThreadInfo*>(thread->getInfo())->index;
 }
 void PushThreadStack(ACSVM::Thread *thread, ACSVM::Word value) {
     thread->dataStk.push(value);

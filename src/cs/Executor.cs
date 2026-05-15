@@ -52,9 +52,10 @@ public readonly ref struct ThreadHandle
     }
     public object GetThreadInfo() {
         unsafe {
-            var threadInfoData = Interop.Methods.GetThreadThreadInfoData(m_ptr);
-            var threadInfo = GCHandle.FromIntPtr((nint)threadInfoData).Target!;
-            return threadInfo;
+            var threadInfoIndex = Interop.Methods.GetThreadThreadInfoIndex(m_ptr);
+            var context = Interop.Methods.GetThreadContext(m_ptr);
+            var executor = GCHandle<Executor>.FromIntPtr((nint)context).Target;
+            return executor.m_threadInfos[threadInfoIndex];
         }
     }
     public void PushStack(uint value) {
@@ -74,17 +75,18 @@ public readonly ref struct ThreadHandle
 public abstract class Executor {
     unsafe readonly protected Interop.Executor* m_executor;
     private readonly List<GCHandle> m_handles;
+    internal Dictionary<int, object> m_threadInfos;
+    private int m_nextThreadInfoIndex = 0;
 
     public Executor() {
         unsafe {
             m_handles = [];
+            m_threadInfos = [];
             var selfHandle = AddHandle(this);
             var callbacks = new Interop.Callbacks {
                 loadModuleCallback = &LoadModuleCDecl,
                 callSpecImplCallback = &CallSpecImplCDecl,
                 checkTagCallback = &CheckTagCDecl,
-                serializeThreadInfoCallback = &SerializeThreadInfoCDecl,
-                deserializeThreadInfoCallback = &DeserializeThreadInfoCDecl,
             };
             m_executor = Interop.Methods.MakeExecutor(callbacks, (void*)GCHandle.ToIntPtr(selfHandle));
         }
@@ -93,6 +95,14 @@ public abstract class Executor {
         foreach (var handle in m_handles) {
             handle.Free();
         }
+    }
+
+    public void SetThreadInfos(Dictionary<int, object> threadInfos) {
+        m_threadInfos = new(threadInfos);
+        m_nextThreadInfoIndex = m_threadInfos.Keys.Max() + 1;
+    }
+    public Dictionary<int, object> GetThreadInfos() {
+        return new(m_threadInfos);
     }
 
     protected GCHandle AddHandle(object obj) {
@@ -143,30 +153,9 @@ public abstract class Executor {
     public abstract uint CallSpecImpl(ThreadHandle threadHandle, uint spec, uint[] args);
 
     [UnmanagedCallersOnly(CallConvs = new[] { typeof(CallConvCdecl) })]
-    unsafe static Interop.ThreadInfoSerialized SerializeThreadInfoCDecl(void* context, void* threadInfoData) {
+    unsafe protected static void FreeDataCallback(void* context, int index) {
         var self = GCHandle<Executor>.FromIntPtr((nint)context).Target;
-        var threadInfo = GCHandle.FromIntPtr((nint)threadInfoData).Target!;
-
-        var result = self.SerializeThreadInfo(threadInfo);
-        return new Interop.ThreadInfoSerialized { activator = result.Activator };
-    }
-    public abstract ThreadInfoSerialized SerializeThreadInfo(object threadInfo);
-
-    [UnmanagedCallersOnly(CallConvs = new[] { typeof(CallConvCdecl) })]
-    unsafe static void DeserializeThreadInfoCDecl(void* context, void* threadInfoData, Interop.ThreadInfoSerialized threadInfoSerialized) {
-        var self = GCHandle<Executor>.FromIntPtr((nint)context).Target;
-        var threadInfo = GCHandle.FromIntPtr((nint)threadInfoData).Target!;
-
-        var threadInfoSerializedSafe = new ThreadInfoSerialized { Activator = threadInfoSerialized.activator };
-
-        self.DeserializeThreadInfo(threadInfo, threadInfoSerializedSafe);
-    }
-    public abstract void DeserializeThreadInfo(object threadInfo, ThreadInfoSerialized threadInfoSerialized);
-
-    [UnmanagedCallersOnly(CallConvs = new[] { typeof(CallConvCdecl) })]
-    unsafe protected static void FreeDataCallback(void* data) {
-        var dataHandle = GCHandle.FromIntPtr((nint)data);
-        dataHandle.Free();
+        self.m_threadInfos.Remove(index);
     }
 
     [UnmanagedCallersOnly(CallConvs = new[] { typeof(CallConvCdecl) })]
@@ -220,11 +209,13 @@ public abstract class Executor {
             }
         }
     }
-    private static Interop.CSThreadInfo MakeCSThreadInfo(object threadInfo) {
+    private Interop.CSThreadInfo MakeCSThreadInfo(object threadInfo) {
         unsafe {
-            var threadInfoHandle = GCHandle.Alloc(threadInfo);
+            var index = m_nextThreadInfoIndex;
+            m_nextThreadInfoIndex += 1;
+            m_threadInfos[index] = threadInfo;
             return new Interop.CSThreadInfo {
-                data = (void*)GCHandle.ToIntPtr(threadInfoHandle),
+                index = index,
                 freeCallback = &FreeDataCallback
             };
         }

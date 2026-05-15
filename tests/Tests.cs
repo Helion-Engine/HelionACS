@@ -4,6 +4,10 @@ using System.Collections.Generic;
 
 namespace Tests;
 
+class TestThreadInfo {
+    public readonly int x = 512;
+}
+
 class MyExecutor : HelionACS.Executor {
     public MyExecutor() {
         AddCodeDataACS0(57, "",   2, CF_Random);
@@ -29,10 +33,6 @@ class MyExecutor : HelionACS.Executor {
         Assert.Equal(10u, tag);
         return !ShouldTagWait;
     }
-    public override void DeserializeThreadInfo(object threadInfo, HelionACS.ThreadInfoSerialized threadInfoSerialized) {}
-    public override HelionACS.ThreadInfoSerialized SerializeThreadInfo(object threadInfo) {
-        return new HelionACS.ThreadInfoSerialized { Activator = 0 };
-    }
 
     public readonly List<string> printBufferOutput = [];
     public List<uint> ranLineSpecials = [];
@@ -52,7 +52,8 @@ class MyExecutor : HelionACS.Executor {
         return false;
     }
     public bool CF_EndPrint(HelionACS.ThreadHandle thread, uint[] args) {
-        var _ = thread.GetThreadInfo();
+        var threadInfo = thread.GetThreadInfo() as TestThreadInfo;
+        Assert.Equal(512, threadInfo.x);
         printBufferOutput.Add(thread.GetPrintBuf());
         return false;
     }
@@ -75,7 +76,7 @@ public class ExecutorTests
     [Fact]
     public void TestRunOpenScripts()
     {
-        executor.ScriptStartType(HelionACS.ScriptType.Open, [], new object());
+        executor.ScriptStartType(HelionACS.ScriptType.Open, [], new TestThreadInfo());
 
         Assert.True(executor.HasActiveThread()); executor.Exec();
         Assert.Equal([], executor.printBufferOutput);
@@ -94,17 +95,17 @@ public class ExecutorTests
     [Fact]
     public void TestRunOpenScriptsNoModule() {
         var executor = new MyExecutor();
-        executor.ScriptStartType(HelionACS.ScriptType.Open, [], new object());
+        executor.ScriptStartType(HelionACS.ScriptType.Open, [], new TestThreadInfo());
     }
 
     [Fact]
     public void TestRunSpecificScript()
     {
-        Assert.True(executor.ScriptStart(2, 0, 0, [], new object()));
+        Assert.True(executor.ScriptStart(2, 0, 0, [], new TestThreadInfo()));
         Assert.True(executor.HasActiveThread()); executor.Exec();
         Assert.Equal(["Hello from script 2"], executor.printBufferOutput);
 
-        Assert.True(executor.ScriptStart("Named", 0, 0, [], new object()));
+        Assert.True(executor.ScriptStart("Named", 0, 0, [], new TestThreadInfo()));
         Assert.True(executor.HasActiveThread()); executor.Exec();
         Assert.Equal(["Hello from script 2", "Hello from a named script"], executor.printBufferOutput);
 
@@ -114,8 +115,8 @@ public class ExecutorTests
     [Fact]
     public void TestRunScriptsForced()
     {
-        Assert.True(executor.ScriptStartForced(2, 0, 0, [], new object()));
-        Assert.True(executor.ScriptStartForced("Named", 0, 0, [], new object()));
+        Assert.True(executor.ScriptStartForced(2, 0, 0, [], new TestThreadInfo()));
+        Assert.True(executor.ScriptStartForced("Named", 0, 0, [], new TestThreadInfo()));
         Assert.True(executor.HasActiveThread()); executor.Exec();
         Assert.Equal(["Hello from script 2", "Hello from a named script"], executor.printBufferOutput);
 
@@ -125,19 +126,19 @@ public class ExecutorTests
     [Fact]
     public void TestRunNonExistentScriptReturnsFalse()
     {
-        Assert.False(executor.ScriptStartForced(12345, 0, 0, [], new object()));
+        Assert.False(executor.ScriptStartForced(12345, 0, 0, [], new TestThreadInfo()));
     }
 
     [Fact]
     public void TestRunScriptWithResult()
     {
-        Assert.Equal(500u, executor.ScriptStartResult("ReturnsResult", [], new object()));
+        Assert.Equal(500u, executor.ScriptStartResult("ReturnsResult", [], new TestThreadInfo()));
     }
 
     [Fact]
     public void TestRunScriptUsingALineSpecial()
     {
-        Assert.True(executor.ScriptStart("UsesALineSpecial", 0, 0, [], new object()));
+        Assert.True(executor.ScriptStart("UsesALineSpecial", 0, 0, [], new TestThreadInfo()));
         Assert.True(executor.HasActiveThread()); executor.Exec();
         Assert.Equal([11], executor.ranLineSpecials);
         Assert.Equal([[10, 32, 0, 0, 0]], executor.ranLineSpecialArgs);
@@ -149,7 +150,7 @@ public class ExecutorTests
     [Fact]
     public void TestTagWait()
     {
-        Assert.True(executor.ScriptStart("UsesTagWait", 0, 0, [], new object()));
+        Assert.True(executor.ScriptStart("UsesTagWait", 0, 0, [], new TestThreadInfo()));
         executor.ShouldTagWait = true;
         Assert.True(executor.HasActiveThread()); executor.Exec();
         Assert.Equal(["Pre-wait"], executor.printBufferOutput);
@@ -169,7 +170,7 @@ public class ExecutorTests
     [Fact]
     public void TestRandom()
     {
-        Assert.True(executor.ScriptStart("UsesRandom", 0, 0, [], new object()));
+        Assert.True(executor.ScriptStart("UsesRandom", 0, 0, [], new TestThreadInfo()));
         Assert.True(executor.HasActiveThread()); executor.Exec();
         Assert.Equal(["5", "8", "-2"], executor.printBufferOutput);
 
