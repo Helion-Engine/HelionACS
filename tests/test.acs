@@ -33,3 +33,7 @@ script "UsesRandom" (void) {
     Print(i:Random(4, 15));
     Print(i:Random(-5, 12));
 }
+script "UsesGetActorVelX" (void) {
+    Print(f:GetActorVelX(5));
+    Print(f:GetActorVelX(4));
+}

@@ -208,6 +208,10 @@ public:
     void AddCodeDataACS0(ACSVM::Word code, const char* args, ACSVM::Word stackArgC, ACSVM::Word callFunc) {
         this->env.addCodeDataACS0(code, { args, stackArgC, callFunc });
     }
+    void AddFuncDataACS0(ACSVM::Word code, ACSVM::Word callFunc) {
+        this->env.addFuncDataACS0(code, callFunc);
+    }
+
     bool SaveState(char* toFile) {
         std::ofstream file(toFile, std::ios::binary);
         if (!file)
@@ -315,6 +319,9 @@ ACSVM::Word AddCallFunc(Executor* executor, void* funcContext, CallFunc callFunc
 }
 void AddCodeDataACS0(Executor* executor, ACSVM::Word code, const char *args, ACSVM::Word stackArgC, ACSVM::Word callFunc) {
     executor->AddCodeDataACS0(code, args, stackArgC, callFunc);
+}
+void AddFuncDataACS0(Executor* executor, ACSVM::Word code, ACSVM::Word callFunc) {
+    executor->AddFuncDataACS0(code, callFunc);
 }
 void MakeThreadTagWait(ACSVM::Thread *thread, ACSVM::Word type, ACSVM::Word tag) {
     thread->state = { ACSVM::ThreadState::WaitTag, tag, type };

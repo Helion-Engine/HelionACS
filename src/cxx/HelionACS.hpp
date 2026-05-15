@@ -59,6 +59,7 @@ HELIONACS_API bool LoadState(Executor * executor, char* fromFile);
 using CallFunc = bool (*)(void* funcContext, ACSVM::Thread *thread, ACSVM::Word const *argv, ACSVM::Word argc);
 HELIONACS_API ACSVM::Word AddCallFunc(Executor* executor, void* funcContext, CallFunc callFunc);
 HELIONACS_API void AddCodeDataACS0(Executor* executor, ACSVM::Word code, const char *args, ACSVM::Word stackArgC, ACSVM::Word callFunc);
+HELIONACS_API void AddFuncDataACS0(Executor* executor, ACSVM::Word code, ACSVM::Word callFunc);
 HELIONACS_API void MakeThreadTagWait(ACSVM::Thread* thread, ACSVM::Word type, ACSVM::Word tag);
 HELIONACS_API void GetThreadPrintBuffer(ACSVM::Thread* thread, const char** buf, std::size_t* length);
 HELIONACS_API void* GetThreadContext(ACSVM::Thread* thread);

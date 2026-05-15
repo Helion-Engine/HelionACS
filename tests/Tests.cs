@@ -15,6 +15,8 @@ class MyExecutor : HelionACS.Executor {
         AddCodeDataACS0(61, "",   1, CF_TagWait);
         AddCodeDataACS0(62, "W",  0, CF_TagWait);
         AddCodeDataACS0(86, "",   0, CF_EndPrint);
+
+        AddFuncDataACS0(9, CF_GetActorVelX);
     }
 
     public override byte[] LoadModule(string moduleName) {
@@ -61,6 +63,14 @@ class MyExecutor : HelionACS.Executor {
         Assert.Equal(10u, args[0]);
         thread.MakeTagWait(0, args[0]);
         return true;
+    }
+    public bool CF_GetActorVelX(HelionACS.ThreadHandle thread, uint[] args) {
+        if (args[0] == 5) {
+            thread.PushStack((24 << 16) + (1 << 15)); // 24.5 in fixed point
+        } else {
+            thread.PushStack(0);
+        }
+        return false;
     }
 }
 
@@ -173,6 +183,16 @@ public class ExecutorTests
         Assert.True(executor.ScriptStart("UsesRandom", 0, 0, [], new TestThreadInfo()));
         Assert.True(executor.HasActiveThread()); executor.Exec();
         Assert.Equal(["5", "8", "-2"], executor.printBufferOutput);
+
+        Assert.False(executor.HasActiveThread());
+    }
+
+    [Fact]
+    public void TestAddFunc()
+    {
+        Assert.True(executor.ScriptStart("UsesGetActorVelX", 0, 0, [], new TestThreadInfo()));
+        Assert.True(executor.HasActiveThread()); executor.Exec();
+        Assert.Equal(["24.5", "0"], executor.printBufferOutput);
 
         Assert.False(executor.HasActiveThread());
     }

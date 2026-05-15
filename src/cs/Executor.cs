@@ -181,6 +181,14 @@ public abstract class Executor {
             Interop.Methods.AddCodeDataACS0(m_executor, code, (sbyte*)argsHandle.AddrOfPinnedObject(), stackArgC, func);
         }
     }
+    public void AddFuncDataACS0(uint code, CallFunc callFunc) {
+        var callFuncHandle = AddHandle(callFunc);
+
+        unsafe {
+            var func = Interop.Methods.AddCallFunc(m_executor, (void*)GCHandle.ToIntPtr(callFuncHandle), &GenericCallFunc);
+            Interop.Methods.AddFuncDataACS0(m_executor, code, func);
+        }
+    }
 
     public void LoadHubMap(uint hubId, uint mapId, string[] moduleNames) {
         var moduleNamesC = Array.ConvertAll(
