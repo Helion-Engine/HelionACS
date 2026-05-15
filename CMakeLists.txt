@@ -2,10 +2,11 @@ cmake_minimum_required(VERSION 3.16)
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
 project(HelionACS-native LANGUAGES CXX)
 
-add_library(HelionACS-native SHARED
+set(SOURCES
     src/cxx/HelionACS.cpp
     src/cxx/ACSVM/ACSVM/Action.cpp
     src/cxx/ACSVM/ACSVM/Array.cpp
@@ -30,13 +31,15 @@ add_library(HelionACS-native SHARED
     src/cxx/ACSVM/ACSVM/Tracer.cpp
 )
 
-target_compile_definitions(HelionACS-native PRIVATE HELIONACS_BUILD)
+add_library(HelionACS-obj OBJECT ${SOURCES})
 
-target_include_directories(HelionACS-native PUBLIC
-    ${CMAKE_CURRENT_SOURCE_DIR}
-)
+target_compile_definitions(HelionACS-obj PRIVATE HELIONACS_BUILD)
+target_include_directories(HelionACS-obj PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+
+add_library(HelionACS-native SHARED $<TARGET_OBJECTS:HelionACS-obj>)
+add_library(HelionACS-native-static STATIC $<TARGET_OBJECTS:HelionACS-obj>)
+
 if (WIN32)
-    set_target_properties(HelionACS-native PROPERTIES
-        PREFIX ""
-    )
+    set_target_properties(HelionACS-native PROPERTIES PREFIX "")
+    set_target_properties(HelionACS-native-static PROPERTIES PREFIX "")
 endif()

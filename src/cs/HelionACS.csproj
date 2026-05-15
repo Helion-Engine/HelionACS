@@ -27,12 +27,21 @@
     <None Include="../../build-native/linux-x64/libHelionACS-native.so"
           Pack="true"
           PackagePath="runtimes/linux-x64/native/" />
+    <None Include="../../build-native/linux-x64/libHelionACS-native-static.a"
+          Pack="true"
+          PackagePath="runtimes/linux-x64/native/" />
 
     <None Include="../../build-native/osx-x64/libHelionACS-native.dylib"
           Pack="true"
           PackagePath="runtimes/osx-x64/native/" />
+    <None Include="../../build-native/osx-x64/libHelionACS-native-static.a"
+          Pack="true"
+          PackagePath="runtimes/osx-x64/native/" />
 
     <None Include="../../build-native/win-x64/HelionACS-native.dll"
+          Pack="true"
+          PackagePath="runtimes/win-x64/native/" />
+    <None Include="../../build-native/win-x64/HelionACS-native-static.lib"
           Pack="true"
           PackagePath="runtimes/win-x64/native/" />
   </ItemGroup>

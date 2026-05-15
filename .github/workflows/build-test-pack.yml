@@ -50,16 +50,22 @@ jobs:
         include:
           - os: ubuntu-latest
             rid: linux-x64
-            libname-src: libHelionACS-native.so
-            libname: libHelionACS-native.so
+            dyn-src: libHelionACS-native.so
+            dyn-dest: libHelionACS-native.so
+            static-src: libHelionACS-native-static.a
+            static-dest: libHelionACS-native-static.a
           - os: macos-latest
             rid: osx-x64
-            libname-src: libHelionACS-native.dylib
-            libname: libHelionACS-native.dylib
+            dyn-src: libHelionACS-native.dylib
+            dyn-dest: libHelionACS-native.dylib
+            static-src: libHelionACS-native-static.a
+            static-dest: libHelionACS-native-static.a
           - os: windows-latest
             rid: win-x64
-            libname-src: Release/HelionACS-native.dll
-            libname: HelionACS-native.dll
+            dyn-src: Release/HelionACS-native.dll
+            dyn-dest: HelionACS-native.dll
+            static-src: Release/HelionACS-native-static.lib
+            static-dest: HelionACS-native-static.lib
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
@@ -85,7 +91,8 @@ jobs:
         shell: bash
         run: |
           mkdir -p build-native/${{ matrix.rid }}
-          cp build/${{ matrix.libname-src }} build-native/${{ matrix.rid }}/${{ matrix.libname }}
+          cp build/${{ matrix.dyn-src }} build-native/${{ matrix.rid }}/${{ matrix.dyn-dest }}
+          cp build/${{ matrix.static-src }} build-native/${{ matrix.rid }}/${{ matrix.static-dest }}
       - name: Upload native artifact
         uses: actions/upload-artifact@v4
         with:
