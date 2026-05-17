@@ -40,3 +40,13 @@ script "UsesGetActorVelX" (void) {
 script "UsesSpawn" (void) {
     Print(i:Spawn("something", 1, 2, 3));
 }
+
+int something;
+world int 1:somethingWorld;
+global int 2:somethingGlobal;
+script "ModifiesState" (void) {
+    Print(i:something, s:" ", i:somethingWorld, s:" ", i:somethingGlobal);
+    something += 1;
+    somethingWorld += 1;
+    somethingGlobal += 1;
+}

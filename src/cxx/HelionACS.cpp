@@ -113,7 +113,7 @@ public:
             return;
         }
 
-        if (this->currentHubScope != nullptr && this->currentHubScope->id != hubId) {
+        if (this->currentHubScope != nullptr && (hubId == 0 || this->currentHubScope->id != hubId)) {
             this->currentHubScope->reset();
             this->currentHubScope = nullptr;
             currentMapScope = nullptr;
