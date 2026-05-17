@@ -25,6 +25,8 @@ public enum ScriptType : uint {
 
 public record struct ThreadInfoData(int Activator);
 
+public class StackUnderflowException : Exception {}
+
 public readonly ref struct ThreadHandle
 {
     private readonly unsafe Interop.Thread* m_ptr;
@@ -272,7 +274,10 @@ public abstract class Executor {
     }
     public void Exec() {
         unsafe {
-            Interop.Methods.Exec(m_executor);
+            var error = Interop.Methods.Exec(m_executor);
+            if (error == Interop.ExecError.StackUnderflow) {
+                throw new StackUnderflowException();
+            }
         }
     }
     public unsafe bool SaveState(string file)

@@ -49,8 +49,13 @@ HELIONACS_API bool ScriptStopNum(Executor* executor, ACSVM::Word num, ACSVM::Wor
 HELIONACS_API bool ScriptPauseName(Executor* executor, const char* name, ACSVM::Word hubId, ACSVM::Word mapId);
 HELIONACS_API bool ScriptPauseNum(Executor* executor, ACSVM::Word num, ACSVM::Word hubId, ACSVM::Word mapId);
 
+enum ExecError {
+    None,
+    StackUnderflow
+};
+
 HELIONACS_API bool HasActiveThread(Executor* executor);
-HELIONACS_API void Exec(Executor* executor);
+HELIONACS_API ExecError Exec(Executor* executor);
 HELIONACS_API bool SaveState(Executor * executor, char* toFile);
 HELIONACS_API bool LoadState(Executor * executor, char* fromFile);
 

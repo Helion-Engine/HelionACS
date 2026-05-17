@@ -12,7 +12,14 @@ class MyExecutor : HelionACS.Executor {
         AddCodeDataACS0(62, "W",  0, CF_TagWait);
         AddCodeDataACS0(86, "",   0, CF_EndPrint);
 
+        AddCodeDataACS0(149, "",        6, CF_Spawn);
+        AddCodeDataACS0(150, "WSWWWWW", 0, CF_Spawn);
+
         AddFuncDataACS0(9, CF_GetActorVelX);
+    }
+    public void UseBrokenSpawn() {
+        AddCodeDataACS0(149, "",        6, CF_SpawnBroken);
+        AddCodeDataACS0(150, "WSWWWWW", 0, CF_SpawnBroken);
     }
 
     public override byte[] LoadModule(string moduleName) {
@@ -67,6 +74,26 @@ class MyExecutor : HelionACS.Executor {
             thread.PushStack(0);
         }
         return false;
+    }
+    public bool CF_Spawn(HelionACS.ThreadHandle thread, uint[] args) {
+        Assert.Equal("something", thread.GetString(args[0]));
+        Assert.Equal(1u, args[1]);
+        Assert.Equal(2u, args[2]);
+        Assert.Equal(3u, args[3]);
+        Assert.Equal(0u, args[4]);
+        Assert.Equal(0u, args[5]);
+        thread.PushStack(1);
+        return false;
+    }
+    public bool CF_SpawnBroken(HelionACS.ThreadHandle thread, uint[] args) {
+        Assert.Equal("something", thread.GetString(args[0]));
+        Assert.Equal(1u, args[1]);
+        Assert.Equal(2u, args[2]);
+        Assert.Equal(3u, args[3]);
+        Assert.Equal(0u, args[4]);
+        Assert.Equal(0u, args[5]);
+        // lack of stack push
+        return true;
     }
 }
 
@@ -192,5 +219,27 @@ public class ExecutorTests
         Assert.Equal(["24.5", "0"], executor.printBufferOutput);
 
         Assert.False(executor.HasActiveThread());
+    }
+
+    [Fact]
+    public void TestSpawn()
+    {
+        Assert.True(executor.ScriptStart("UsesSpawn", 0, 0, [], DefaultThreadInfo));
+        Assert.True(executor.HasActiveThread()); executor.Exec();
+        Assert.Equal(["1"], executor.printBufferOutput);
+
+        Assert.False(executor.HasActiveThread());
+    }
+
+    [Fact]
+    public void TestStackUnderflow()
+    {
+        var executor = new MyExecutor();
+        executor.UseBrokenSpawn();
+        executor.LoadHubMap(0, 0, ["module"]);
+
+        Assert.True(executor.ScriptStart("UsesSpawn", 0, 0, [], DefaultThreadInfo));
+        Assert.True(executor.HasActiveThread());
+        Assert.Throws<HelionACS.StackUnderflowException>(() => executor.Exec());
     }
 }
