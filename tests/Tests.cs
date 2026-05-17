@@ -6,8 +6,8 @@ namespace Tests;
 
 class MyExecutor : HelionACS.Executor {
     public MyExecutor() {
-        AddCodeDataACS0(57, "",   2, CF_Random);
-        AddCodeDataACS0(58, "WW", 0, CF_Random);
+        AddCodeDataACS0I(57, "",   2, CF_Random);
+        AddCodeDataACS0I(58, "WW", 0, CF_Random);
         AddCodeDataACS0(61, "",   1, CF_TagWait);
         AddCodeDataACS0(62, "W",  0, CF_TagWait);
         AddCodeDataACS0(86, "",   0, CF_EndPrint);
@@ -15,7 +15,7 @@ class MyExecutor : HelionACS.Executor {
         AddCodeDataACS0(149, "",        6, CF_Spawn);
         AddCodeDataACS0(150, "WSWWWWW", 0, CF_Spawn);
 
-        AddFuncDataACS0(9, CF_GetActorVelX);
+        AddFuncDataACS0F(9, CF_GetActorVelX);
     }
     public void UseBrokenSpawn() {
         AddCodeDataACS0(149, "",        6, CF_SpawnBroken);
@@ -43,18 +43,15 @@ class MyExecutor : HelionACS.Executor {
     public List<uint> ranLineSpecials = [];
     public List<uint[]> ranLineSpecialArgs = [];
 
-    public HelionACS.CallFuncResult CF_Random(HelionACS.ThreadHandle thread, uint[] args) {
+    public int CF_Random(HelionACS.ThreadHandle thread, uint[] args) {
         var min = (int)args[0];
         var max = (int)args[1];
-        thread.PushStack(
-            (uint)((min, max) switch {
-                (0, 7) => 5,
-                (4, 15) => 8,
-                (-5, 12) => -2,
-                (_, _) => 0,
-            })
-        );
-        return HelionACS.CallFuncResult.NextOp;
+        return (min, max) switch {
+            (0, 7) => 5,
+            (4, 15) => 8,
+            (-5, 12) => -2,
+            (_, _) => 0,
+        };
     }
     public HelionACS.CallFuncResult CF_EndPrint(HelionACS.ThreadHandle thread, uint[] args) {
         var threadInfo = thread.GetThreadInfo();
@@ -67,13 +64,12 @@ class MyExecutor : HelionACS.Executor {
         thread.MakeTagWait(0, args[0]);
         return HelionACS.CallFuncResult.ReevaluateState;
     }
-    public HelionACS.CallFuncResult CF_GetActorVelX(HelionACS.ThreadHandle thread, uint[] args) {
+    public double CF_GetActorVelX(HelionACS.ThreadHandle thread, uint[] args) {
         if (args[0] == 5) {
-            thread.PushStack((24 << 16) + (1 << 15)); // 24.5 in fixed point
+            return 24.5;
         } else {
-            thread.PushStack(0);
+            return 0.0;
         }
-        return HelionACS.CallFuncResult.NextOp;
     }
     public HelionACS.CallFuncResult CF_Spawn(HelionACS.ThreadHandle thread, uint[] args) {
         Assert.Equal("something", thread.GetString(args[0]));

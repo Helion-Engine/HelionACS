@@ -185,6 +185,79 @@ public abstract class Executor {
         }
     }
 
+    const int FixedBits = 16;
+    const int FixedOne = 1 << FixedBits;
+    static int ToFixedPoint(double f) => (int)(f * FixedOne);
+    static double FromFixedPoint(int f) => ((double)f) / FixedOne;
+
+    public delegate void CallFuncV(ThreadHandle thread, uint[] args);
+    public void AddCodeDataACS0V(uint code, string args, uint stackArgC, CallFuncV callFunc) {
+        AddCodeDataACS0(code, args, stackArgC, (thread, args) => {
+            callFunc(thread, args);
+            return CallFuncResult.NextOp;
+        });
+    }
+    public void AddFuncDataACS0V(uint code, CallFuncV callFunc) {
+        AddFuncDataACS0(code, (thread, args) => {
+            callFunc(thread, args);
+            // funcs can actually never really be void, they just return 0 in ZDoom if they should be void
+            thread.PushStack(0u);
+            return CallFuncResult.NextOp;
+        });
+    }
+    public delegate int CallFuncI(ThreadHandle thread, uint[] args);
+    public void AddCodeDataACS0I(uint code, string args, uint stackArgC, CallFuncI callFunc) {
+        AddCodeDataACS0(code, args, stackArgC, (thread, args) => {
+            var ret = callFunc(thread, args);
+            thread.PushStack((uint)ret);
+            return CallFuncResult.NextOp;
+        });
+    }
+    public void AddFuncDataACS0I(uint code, CallFuncI callFunc) {
+        AddFuncDataACS0(code, (thread, args) => {
+            var ret = callFunc(thread, args);
+            thread.PushStack((uint)ret);
+            return CallFuncResult.NextOp;
+        });
+    }
+    public delegate bool CallFuncB(ThreadHandle thread, uint[] args);
+    public void AddCodeDataACS0B(uint code, string args, uint stackArgC, CallFuncB callFunc) {
+        AddCodeDataACS0(code, args, stackArgC, (thread, args) => {
+            var ret = callFunc(thread, args);
+            thread.PushStack(ret ? 1u : 0u);
+            return CallFuncResult.NextOp;
+        });
+    }
+    public void AddFuncDataACS0B(uint code, CallFuncB callFunc) {
+        AddFuncDataACS0(code, (thread, args) => {
+            var ret = callFunc(thread, args);
+            thread.PushStack(ret ? 1u : 0u);
+            return CallFuncResult.NextOp;
+        });
+    }
+    public delegate double CallFuncF(ThreadHandle thread, uint[] args);
+    public void AddCodeDataACS0F(uint code, string args, uint stackArgC, CallFuncF callFunc) {
+        AddCodeDataACS0(code, args, stackArgC, (thread, args) => {
+            var ret = callFunc(thread, args);
+            thread.PushStack((uint)ToFixedPoint(ret));
+            return CallFuncResult.NextOp;
+        });
+    }
+    public void AddFuncDataACS0F(uint code, CallFuncF callFunc) {
+        AddFuncDataACS0(code, (thread, args) => {
+            var ret = callFunc(thread, args);
+            thread.PushStack((uint)ToFixedPoint(ret));
+            return CallFuncResult.NextOp;
+        });
+    }
+    public delegate string CallFuncS(ThreadHandle thread, uint[] args);
+    public void AddCodeDataACS0S(uint code, string args, uint stackArgC, CallFuncS callFunc) {
+        throw new NotImplementedException();
+    }
+    public void AddFuncDataACS0S(uint code, CallFuncS callFunc) {
+        throw new NotImplementedException();
+    }
+
     public void LoadHubMap(uint hubId, uint mapId, string[] moduleNames) {
         var moduleNamesC = Array.ConvertAll(
             moduleNames,
