@@ -11,8 +11,8 @@
 #include "ACSVM/ACSVM/Serial.hpp"
 #include "ACSVM/ACSVM/SerialSTD.hpp"
 #include "ACSVM/ACSVM/Error.hpp"
+#include "ACSVM/ACSVM/Stack.hpp"
 #include <cstddef>
-#include <optional>
 #include <span>
 #include <string_view>
 #include <fstream>
@@ -191,8 +191,13 @@ public:
     bool HasActiveThread() {
         return this->env.hasActiveThread();
     }
-    void Exec() {
-        this->env.exec();
+    ExecError Exec() {
+        try {
+            this->env.exec();
+            return ExecError::None;
+        } catch (ACSVM::StackUnderflowException) {
+            return ExecError::StackUnderflow;
+        }
     }
 
     ACSVM::Word AddCallFunc(void* funcContext, CallFunc callFunc) {
@@ -298,8 +303,8 @@ bool ScriptPauseNum(Executor* executor, ACSVM::Word num, ACSVM::Word hubId, ACSV
 bool HasActiveThread(Executor *executor) {
     return executor->HasActiveThread();
 }
-void Exec(Executor* executor) {
-    executor->Exec();
+ExecError Exec(Executor* executor) {
+    return executor->Exec();
 }
 bool SaveState(Executor* executor, char* toFile) {
     return executor->SaveState(toFile);

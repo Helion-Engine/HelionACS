@@ -24,6 +24,8 @@
 
 namespace ACSVM
 {
+   class StackUnderflowException {};
+
    //
    // Stack
    //
@@ -48,13 +50,17 @@ namespace ACSVM
 
       // drop
       void drop() {
-          if (stkPtr <= stack)
-              return;
-          (--stkPtr)->~T();
+          drop(1);
       }
       void drop(std::size_t n) {
-          while (n-- && stkPtr > stack)
+          while (n--)
+          {
+              if (stkPtr <= stack)
+              {
+                  throw StackUnderflowException();
+              }
               (--stkPtr)->~T();
+          }
       }
 
       // empty
