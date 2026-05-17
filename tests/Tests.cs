@@ -43,7 +43,7 @@ class MyExecutor : HelionACS.Executor {
     public List<uint> ranLineSpecials = [];
     public List<uint[]> ranLineSpecialArgs = [];
 
-    public bool CF_Random(HelionACS.ThreadHandle thread, uint[] args) {
+    public HelionACS.CallFuncResult CF_Random(HelionACS.ThreadHandle thread, uint[] args) {
         var min = (int)args[0];
         var max = (int)args[1];
         thread.PushStack(
@@ -54,28 +54,28 @@ class MyExecutor : HelionACS.Executor {
                 (_, _) => 0,
             })
         );
-        return false;
+        return HelionACS.CallFuncResult.NextOp;
     }
-    public bool CF_EndPrint(HelionACS.ThreadHandle thread, uint[] args) {
+    public HelionACS.CallFuncResult CF_EndPrint(HelionACS.ThreadHandle thread, uint[] args) {
         var threadInfo = thread.GetThreadInfo();
         Assert.Equal(512, threadInfo.Activator);
         printBufferOutput.Add(thread.GetPrintBuf());
-        return false;
+        return HelionACS.CallFuncResult.NextOp;
     }
-    public bool CF_TagWait(HelionACS.ThreadHandle thread, uint[] args) {
+    public HelionACS.CallFuncResult CF_TagWait(HelionACS.ThreadHandle thread, uint[] args) {
         Assert.Equal(10u, args[0]);
         thread.MakeTagWait(0, args[0]);
-        return true;
+        return HelionACS.CallFuncResult.ReevaluateState;
     }
-    public bool CF_GetActorVelX(HelionACS.ThreadHandle thread, uint[] args) {
+    public HelionACS.CallFuncResult CF_GetActorVelX(HelionACS.ThreadHandle thread, uint[] args) {
         if (args[0] == 5) {
             thread.PushStack((24 << 16) + (1 << 15)); // 24.5 in fixed point
         } else {
             thread.PushStack(0);
         }
-        return false;
+        return HelionACS.CallFuncResult.NextOp;
     }
-    public bool CF_Spawn(HelionACS.ThreadHandle thread, uint[] args) {
+    public HelionACS.CallFuncResult CF_Spawn(HelionACS.ThreadHandle thread, uint[] args) {
         Assert.Equal("something", thread.GetString(args[0]));
         Assert.Equal(1u, args[1]);
         Assert.Equal(2u, args[2]);
@@ -83,9 +83,9 @@ class MyExecutor : HelionACS.Executor {
         Assert.Equal(0u, args[4]);
         Assert.Equal(0u, args[5]);
         thread.PushStack(1);
-        return false;
+        return HelionACS.CallFuncResult.NextOp;
     }
-    public bool CF_SpawnBroken(HelionACS.ThreadHandle thread, uint[] args) {
+    public HelionACS.CallFuncResult CF_SpawnBroken(HelionACS.ThreadHandle thread, uint[] args) {
         Assert.Equal("something", thread.GetString(args[0]));
         Assert.Equal(1u, args[1]);
         Assert.Equal(2u, args[2]);
@@ -93,7 +93,7 @@ class MyExecutor : HelionACS.Executor {
         Assert.Equal(0u, args[4]);
         Assert.Equal(0u, args[5]);
         // lack of stack push
-        return true;
+        return HelionACS.CallFuncResult.ReevaluateState;
     }
 }
 

@@ -27,6 +27,11 @@ public record struct ThreadInfoData(int Activator);
 
 public class StackUnderflowException : Exception {}
 
+public enum CallFuncResult {
+    NextOp,
+    ReevaluateState,
+}
+
 public readonly ref struct ThreadHandle
 {
     private readonly unsafe Interop.Thread* m_ptr;
@@ -150,11 +155,16 @@ public abstract class Executor {
         var argsSpan = new ReadOnlySpan<uint>(argv, (int)argc);
         var args = argsSpan.ToArray();
 
-        var result = (byte)(delegateCallFunc.Invoke(new ThreadHandle(thread), args) ? 1 : 0);
+        var result = delegateCallFunc.Invoke(new ThreadHandle(thread), args) switch
+        {
+            CallFuncResult.NextOp => (byte)0,
+            CallFuncResult.ReevaluateState => (byte)1,
+            _ => (byte)0,
+        };
         return result;
     }
 
-    public delegate bool CallFunc(ThreadHandle threadHandle, uint[] args);
+    public delegate CallFuncResult CallFunc(ThreadHandle threadHandle, uint[] args);
     public void AddCodeDataACS0(uint code, string args, uint stackArgC, CallFunc callFunc) {
         var argsBytes = (sbyte[]) (Array) Encoding.UTF8.GetBytes(args + "\0");
         var argsHandle = AddPinnedHandle(argsBytes);
