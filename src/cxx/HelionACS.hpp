@@ -57,7 +57,7 @@ enum ExecError {
 HELIONACS_API bool HasActiveThread(Executor* executor);
 HELIONACS_API ExecError Exec(Executor* executor);
 HELIONACS_API bool SaveState(Executor * executor, char* toFile);
-HELIONACS_API bool LoadState(Executor * executor, char* fromFile);
+HELIONACS_API bool LoadState(Executor * executor, ACSVM::Word hubId, ACSVM::Word mapId, char* fromFile);
 
 using CallFunc = bool (*)(void* funcContext, ACSVM::Thread *thread, ACSVM::Word const *argv, ACSVM::Word argc);
 HELIONACS_API ACSVM::Word AddCallFunc(Executor* executor, void* funcContext, CallFunc callFunc);

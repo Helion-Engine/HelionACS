@@ -224,7 +224,7 @@ public:
         return true;
     }
 
-    bool LoadState(char* fromFile) {
+    bool LoadState(ACSVM::Word hubId, ACSVM::Word mapId, char* fromFile) {
         std::ifstream file(fromFile, std::ios::binary);
         if (!file)
             return false;
@@ -234,6 +234,9 @@ public:
         {
             serial.loadHead();
             this->env.loadState(serial);
+            auto global = this->env.getGlobalScope(0);
+            this->currentHubScope = global->getHubScope(hubId);
+            this->currentMapScope = this->currentHubScope->getMapScope(mapId);
             serial.loadTail();
             return true;
         }
@@ -310,8 +313,8 @@ ExecError Exec(Executor* executor) {
 bool SaveState(Executor* executor, char* toFile) {
     return executor->SaveState(toFile);
 }
-bool LoadState(Executor* executor, char* fromFile) {
-    return executor->LoadState(fromFile);
+bool LoadState(Executor* executor, ACSVM::Word hubId, ACSVM::Word mapId, char* fromFile) {
+    return executor->LoadState(hubId, mapId, fromFile);
 }
 ACSVM::Word AddCallFunc(Executor* executor, void* funcContext, CallFunc callFunc) {
     return executor->AddCallFunc(funcContext, callFunc);

@@ -371,12 +371,12 @@ public abstract class Executor {
             return Interop.Methods.SaveState(m_executor, filename) != 0;
         }
     }
-    public unsafe bool LoadState(string file)
+    public unsafe bool LoadState(uint hubId, uint mapId, string file)
     {
         var fileBytes = (sbyte[])(Array)Encoding.UTF8.GetBytes(file + "\0");
         fixed (sbyte* filename = &fileBytes[0])
         {
-            return Interop.Methods.LoadState(m_executor, filename) != 0;
+            return Interop.Methods.LoadState(m_executor, hubId, mapId, filename) != 0;
         }
     }
 }
