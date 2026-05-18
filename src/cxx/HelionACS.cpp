@@ -108,7 +108,8 @@ public:
         auto global = env.getGlobalScope(0); global->active = true;
 
         if (
-            this->currentHubScope != nullptr && this->currentMapScope != nullptr
+            hubId != 0
+            && this->currentHubScope != nullptr && this->currentMapScope != nullptr
             && this->currentHubScope->id == hubId && this->currentMapScope->id == mapId) {
             return;
         }

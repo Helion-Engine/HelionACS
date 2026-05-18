@@ -251,47 +251,54 @@ public class ExecutorTests
         Assert.Equal(["0 0 0"], executor.printBufferOutput);
         executor.printBufferOutput.Clear();
 
+        executor.LoadHubMap(0, 0, ["module"]);
+
+        Assert.True(executor.ScriptStart("ModifiesState", 0, 0, [], DefaultThreadInfo));
+        Assert.True(executor.HasActiveThread()); executor.Exec();
+        Assert.Equal(["0 0 1"], executor.printBufferOutput);
+        executor.printBufferOutput.Clear();
+
         executor.LoadHubMap(0, 1, ["module"]);
 
         Assert.True(executor.ScriptStart("ModifiesState", 0, 1, [], DefaultThreadInfo));
         Assert.True(executor.HasActiveThread()); executor.Exec();
-        Assert.Equal(["0 0 1"], executor.printBufferOutput);
+        Assert.Equal(["0 0 2"], executor.printBufferOutput);
         executor.printBufferOutput.Clear();
 
         executor.LoadHubMap(1, 0, ["module"]);
 
         Assert.True(executor.ScriptStart("ModifiesState", 1, 0, [], DefaultThreadInfo));
         Assert.True(executor.HasActiveThread()); executor.Exec();
-        Assert.Equal(["0 0 2"], executor.printBufferOutput);
+        Assert.Equal(["0 0 3"], executor.printBufferOutput);
         executor.printBufferOutput.Clear();
 
         Assert.True(executor.ScriptStart("ModifiesState", 1, 0, [], DefaultThreadInfo));
         Assert.True(executor.HasActiveThread()); executor.Exec();
-        Assert.Equal(["1 1 3"], executor.printBufferOutput);
+        Assert.Equal(["1 1 4"], executor.printBufferOutput);
         executor.printBufferOutput.Clear();
 
         executor.LoadHubMap(1, 1, ["module"]);
 
         Assert.True(executor.ScriptStart("ModifiesState", 1, 1, [], DefaultThreadInfo));
         Assert.True(executor.HasActiveThread()); executor.Exec();
-        Assert.Equal(["0 2 4"], executor.printBufferOutput);
+        Assert.Equal(["0 2 5"], executor.printBufferOutput);
         executor.printBufferOutput.Clear();
 
         Assert.True(executor.ScriptStart("ModifiesState", 1, 1, [], DefaultThreadInfo));
         Assert.True(executor.HasActiveThread()); executor.Exec();
-        Assert.Equal(["1 3 5"], executor.printBufferOutput);
+        Assert.Equal(["1 3 6"], executor.printBufferOutput);
         executor.printBufferOutput.Clear();
 
         executor.LoadHubMap(2, 0, ["module"]);
 
         Assert.True(executor.ScriptStart("ModifiesState", 2, 0, [], DefaultThreadInfo));
         Assert.True(executor.HasActiveThread()); executor.Exec();
-        Assert.Equal(["0 0 6"], executor.printBufferOutput);
+        Assert.Equal(["0 0 7"], executor.printBufferOutput);
         executor.printBufferOutput.Clear();
 
         Assert.True(executor.ScriptStart("ModifiesState", 2, 0, [], DefaultThreadInfo));
         Assert.True(executor.HasActiveThread()); executor.Exec();
-        Assert.Equal(["1 1 7"], executor.printBufferOutput);
+        Assert.Equal(["1 1 8"], executor.printBufferOutput);
         executor.printBufferOutput.Clear();
     }
 }
