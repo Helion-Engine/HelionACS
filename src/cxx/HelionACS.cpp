@@ -59,6 +59,9 @@ class Env : public ACSVM::Environment {
 private:
     Callbacks callbacks;
 public:
+    ACSVM::HubScope* currentHubScope = nullptr;
+    ACSVM::MapScope* currentMapScope = nullptr;
+
     void* executorContext;
     Env(Callbacks callbacks, void* executorContext)
         : callbacks(callbacks), executorContext(executorContext) {}
@@ -75,6 +78,12 @@ public:
     }
     ACSVM::Thread * allocThread() override {
         return new ThreadImpl(this, this->executorContext);
+    }
+    ACSVM::ScopeID getScopeID(ACSVM::Word mapnum) const override {
+        if (mapnum == 0) {
+            return {0, currentHubScope != nullptr ? currentHubScope->id : 0, currentMapScope != nullptr ? currentMapScope->id : 1};
+        }
+        return {0, currentHubScope != nullptr ? currentHubScope->id : 0, mapnum};
     }
 };
 
@@ -99,8 +108,6 @@ enum class ScriptType : ACSVM::Word {
 class Executor {
 private:
     Env env;
-    ACSVM::HubScope* currentHubScope = nullptr;
-    ACSVM::MapScope* currentMapScope = nullptr;
 public:
     Executor(Callbacks callbacks, void* executorContext) : env(callbacks, executorContext) {}
 
@@ -109,30 +116,30 @@ public:
 
         if (
             hubId != 0
-            && this->currentHubScope != nullptr && this->currentMapScope != nullptr
-            && this->currentHubScope->id == hubId && this->currentMapScope->id == mapId) {
+            && this->env.currentHubScope != nullptr && this->env.currentMapScope != nullptr
+            && this->env.currentHubScope->id == hubId && this->env.currentMapScope->id == mapId) {
             return;
         }
 
-        if (this->currentHubScope != nullptr && (hubId == 0 || this->currentHubScope->id != hubId)) {
-            this->currentHubScope->reset();
-            this->currentHubScope = nullptr;
-            currentMapScope = nullptr;
+        if (this->env.currentHubScope != nullptr && (hubId == 0 || this->env.currentHubScope->id != hubId)) {
+            this->env.currentHubScope->reset();
+            this->env.currentHubScope = nullptr;
+            env.currentMapScope = nullptr;
         }
-        this->currentHubScope = global->getHubScope(hubId); this->currentHubScope->active = true;
-        if (this->currentMapScope != nullptr && this->currentMapScope->id != mapId) {
-            this->currentMapScope->active = false;
-            this->currentMapScope = nullptr;
+        this->env.currentHubScope = global->getHubScope(hubId); this->env.currentHubScope->active = true;
+        if (this->env.currentMapScope != nullptr && this->env.currentMapScope->id != mapId) {
+            this->env.currentMapScope->active = false;
+            this->env.currentMapScope = nullptr;
         }
-        this->currentMapScope = this->currentHubScope->getMapScope(mapId); this->currentMapScope->active = true;
+        this->env.currentMapScope = this->env.currentHubScope->getMapScope(mapId); this->env.currentMapScope->active = true;
 
-        if (!this->currentMapScope->hasModules()) {
+        if (!this->env.currentMapScope->hasModules()) {
             auto modules = std::vector<ACSVM::Module *> {};
             for (const auto& n : moduleNames) {
                 modules.push_back(this->env.getModule(env.getModuleName(n)));
                 auto module = this->env.getModule(env.getModuleName(n));
             }
-            this->currentMapScope->addModules(modules.data(), modules.size());
+            this->env.currentMapScope->addModules(modules.data(), modules.size());
         }
     }
 
@@ -156,37 +163,37 @@ public:
     }
 
     ACSVM::Word ScriptStartType(ACSVM::Word type, ACSVM::Word* argV, std::size_t argC, CSThreadInfo info) {
-        if (this->currentMapScope == nullptr) { return 0; }
-        return this->currentMapScope->scriptStartType(type, this->MakeInfo(info, argV, argC));
+        if (this->env.currentMapScope == nullptr) { return 0; }
+        return this->env.currentMapScope->scriptStartType(type, this->MakeInfo(info, argV, argC));
     }
     ACSVM::Word ScriptStartTypeForced(ACSVM::Word type, ACSVM::Word* argV, std::size_t argC, CSThreadInfo info) {
-        if (this->currentMapScope == nullptr) { return 0; }
-        return this->currentMapScope->scriptStartTypeForced(type, this->MakeInfo(info, argV, argC));
+        if (this->env.currentMapScope == nullptr) { return 0; }
+        return this->env.currentMapScope->scriptStartTypeForced(type, this->MakeInfo(info, argV, argC));
     }
     template<typename T>
     bool ScriptStart(T scriptId, ACSVM::Word hubId, ACSVM::Word mapId, ACSVM::Word* argV, std::size_t argC, CSThreadInfo info) {
-        if (this->currentMapScope == nullptr) { return false; }
-        return this->currentMapScope->scriptStart(this->GetScriptName(scriptId), this->GetScope(hubId, mapId), this->MakeInfo(info, argV, argC));
+        if (this->env.currentMapScope == nullptr) { return false; }
+        return this->env.currentMapScope->scriptStart(this->GetScriptName(scriptId), this->GetScope(hubId, mapId), this->MakeInfo(info, argV, argC));
     }
     template<typename T>
     bool ScriptStartForced(T scriptId, ACSVM::Word hubId, ACSVM::Word mapId, ACSVM::Word* argV, std::size_t argC, CSThreadInfo info) {
-        if (this->currentMapScope == nullptr) { return false; }
-        return this->currentMapScope->scriptStartForced(this->GetScriptName(scriptId), this->GetScope(hubId, mapId), this->MakeInfo(info, argV, argC));
+        if (this->env.currentMapScope == nullptr) { return false; }
+        return this->env.currentMapScope->scriptStartForced(this->GetScriptName(scriptId), this->GetScope(hubId, mapId), this->MakeInfo(info, argV, argC));
     }
     template<typename T>
     ACSVM::Word ScriptStartResult(T scriptId, ACSVM::Word* argV, std::size_t argC, CSThreadInfo info) {
-        if (this->currentMapScope == nullptr) { return 0; }
-        return this->currentMapScope->scriptStartResult(this->GetScriptName(scriptId), this->MakeInfo(info, argV, argC));
+        if (this->env.currentMapScope == nullptr) { return 0; }
+        return this->env.currentMapScope->scriptStartResult(this->GetScriptName(scriptId), this->MakeInfo(info, argV, argC));
     }
     template<typename T>
     bool ScriptStop(T scriptId, ACSVM::Word hubId, ACSVM::Word mapId) {
-        if (this->currentMapScope == nullptr) { return false; }
-        return this->currentMapScope->scriptStop(this->GetScriptName(scriptId), this->GetScope(hubId, mapId));
+        if (this->env.currentMapScope == nullptr) { return false; }
+        return this->env.currentMapScope->scriptStop(this->GetScriptName(scriptId), this->GetScope(hubId, mapId));
     }
     template<typename T>
     bool ScriptPause(T scriptId, ACSVM::Word hubId, ACSVM::Word mapId) {
-        if (this->currentMapScope == nullptr) { return false; }
-        return this->currentMapScope->scriptStop(this->GetScriptName(scriptId), this->GetScope(hubId, mapId));
+        if (this->env.currentMapScope == nullptr) { return false; }
+        return this->env.currentMapScope->scriptStop(this->GetScriptName(scriptId), this->GetScope(hubId, mapId));
     }
 
     bool HasActiveThread() {
@@ -235,8 +242,8 @@ public:
             serial.loadHead();
             this->env.loadState(serial);
             auto global = this->env.getGlobalScope(0);
-            this->currentHubScope = global->getHubScope(hubId);
-            this->currentMapScope = this->currentHubScope->getMapScope(mapId);
+            this->env.currentHubScope = global->getHubScope(hubId);
+            this->env.currentMapScope = this->env.currentHubScope->getMapScope(mapId);
             serial.loadTail();
             return true;
         }
