@@ -48,7 +48,7 @@ jobs:
     strategy:
       matrix:
         include:
-          - os: ubuntu-latest
+          - os: ubuntu-22.04
             rid: linux-x64
             dyn-src: libHelionACS-native.so
             dyn-dest: libHelionACS-native.so
@@ -60,7 +60,7 @@ jobs:
             dyn-dest: libHelionACS-native.dylib
             static-src: libHelionACS-native-static.a
             static-dest: libHelionACS-native-static.a
-          - os: windows-latest
+          - os: windows-2022
             rid: win-x64
             dyn-src: Release/HelionACS-native.dll
             dyn-dest: HelionACS-native.dll
