@@ -35,6 +35,16 @@ public enum CallFuncResult
 
 public readonly ref struct ThreadHandle
 {
+    const int BufferSize = 256;
+    private static char[][] ArgumentBuffers = new char[5][]
+    {   
+        new char[256],
+        new char[256],
+        new char[256],
+        new char[256],
+        new char[256],
+    };
+
     private readonly unsafe Interop.Thread* m_ptr;
 
     internal unsafe ThreadHandle(Interop.Thread* ptr)
@@ -88,6 +98,28 @@ public readonly ref struct ThreadHandle
         sbyte* str;
         uint length = Interop.Methods.GetString(m_ptr, index, &str);
         return Marshal.PtrToStringUTF8((nint)str, (int)length);
+    }
+
+    public unsafe ReadOnlySpan<char> GetStringSpan(uint argIndex, uint index)
+    {
+        sbyte* str;
+        var length = (int)Interop.Methods.GetString(m_ptr, index, &str);
+
+        if (argIndex >= ArgumentBuffers.Length)
+        {
+            int originalLength = ArgumentBuffers.Length;
+            Array.Resize(ref ArgumentBuffers, originalLength * 2);
+            for (int i = originalLength; i < ArgumentBuffers.Length; i++)
+                ArgumentBuffers[i] = new char[BufferSize];
+        }
+
+        var buffer = ArgumentBuffers[argIndex];
+        var count = Encoding.UTF8.GetCharCount(new ReadOnlySpan<byte>(str, length));
+        if (count > buffer.Length)
+            Array.Resize(ref buffer, count * 2);
+
+        var written = Encoding.UTF8.GetChars(new ReadOnlySpan<byte>(str, length), buffer);
+        return buffer.AsSpan(0, written);
     }
 }
 
