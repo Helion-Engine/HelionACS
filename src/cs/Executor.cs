@@ -1,6 +1,7 @@
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Text;
+using System;
 
 namespace HelionACS;
 
@@ -130,11 +131,11 @@ public abstract class Executor
     static int ToFixedPoint(double f) => (int)(f * FixedOne);
     static double FromFixedPoint(int f) => ((double)f) / FixedOne;
 
-    public delegate CallFuncResult CallFunc(ThreadHandle threadHandle, uint[] args);
-    public delegate void CallFuncV(ThreadHandle thread, uint[] args);
-    public delegate int CallFuncI(ThreadHandle thread, uint[] args);
-    public delegate bool CallFuncB(ThreadHandle thread, uint[] args);
-    public delegate string CallFuncS(ThreadHandle thread, uint[] args);
+    public delegate CallFuncResult CallFunc(ThreadHandle threadHandle, ReadOnlySpan<uint> args);
+    public delegate void CallFuncV(ThreadHandle thread, ReadOnlySpan<uint> args);
+    public delegate int CallFuncI(ThreadHandle thread, ReadOnlySpan<uint> args);
+    public delegate bool CallFuncB(ThreadHandle thread, ReadOnlySpan<uint> args);
+    public delegate string CallFuncS(ThreadHandle thread, ReadOnlySpan<uint> args);
 
     unsafe readonly protected Interop.Executor* m_executor;
     private readonly List<GCHandle> m_handles;
@@ -205,16 +206,15 @@ public abstract class Executor
 
         return self.CallSpecImpl(new ThreadHandle(thread), spec, args);
     }
-    public abstract uint CallSpecImpl(ThreadHandle threadHandle, uint spec, uint[] args);
+    public abstract uint CallSpecImpl(ThreadHandle threadHandle, uint spec, ReadOnlySpan<uint> args);
 
     [UnmanagedCallersOnly(CallConvs = new[] { typeof(CallConvCdecl) })]
     unsafe static byte GenericCallFunc(void* funcContext, Interop.Thread* thread, uint* argv, uint argc)
     {
         var delegateCallFunc = GCHandle<CallFunc>.FromIntPtr((nint)funcContext).Target;
         var argsSpan = new ReadOnlySpan<uint>(argv, (int)argc);
-        var args = argsSpan.ToArray();
 
-        var result = delegateCallFunc.Invoke(new ThreadHandle(thread), args) switch
+        var result = delegateCallFunc.Invoke(new ThreadHandle(thread), argsSpan) switch
         {
             CallFuncResult.NextOp => (byte)0,
             CallFuncResult.ReevaluateState => (byte)1,
@@ -294,7 +294,7 @@ public abstract class Executor
         });
     }
 
-    public delegate double CallFuncF(ThreadHandle thread, uint[] args);
+    public delegate double CallFuncF(ThreadHandle thread, ReadOnlySpan<uint> args);
 
     public void AddCodeDataACS0F(uint code, string args, uint stackArgC, CallFuncF callFunc)
     {

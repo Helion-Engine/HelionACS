@@ -1,6 +1,7 @@
 ﻿using Xunit;
 using System.IO;
 using System.Collections.Generic;
+using System;
 
 namespace Tests;
 
@@ -28,9 +29,9 @@ class MyExecutor : HelionACS.Executor {
         var data = File.ReadAllBytes("test.acs.o");
         return data;
     }
-    public override uint CallSpecImpl(HelionACS.ThreadHandle thread, uint spec, uint[] args) {
+    public override uint CallSpecImpl(HelionACS.ThreadHandle thread, uint spec, ReadOnlySpan<uint> args) {
         ranLineSpecials.Add(spec);
-        ranLineSpecialArgs.Add(args);
+        ranLineSpecialArgs.Add(args.ToArray());
         return 214; // no special meaning, randomly chosen sentinel value
     }
     public bool ShouldTagWait = false;
@@ -43,7 +44,7 @@ class MyExecutor : HelionACS.Executor {
     public List<uint> ranLineSpecials = [];
     public List<uint[]> ranLineSpecialArgs = [];
 
-    public int CF_Random(HelionACS.ThreadHandle thread, uint[] args) {
+    public int CF_Random(HelionACS.ThreadHandle thread, ReadOnlySpan<uint> args) {
         var min = (int)args[0];
         var max = (int)args[1];
         return (min, max) switch {
@@ -53,25 +54,25 @@ class MyExecutor : HelionACS.Executor {
             (_, _) => 0,
         };
     }
-    public HelionACS.CallFuncResult CF_EndPrint(HelionACS.ThreadHandle thread, uint[] args) {
+    public HelionACS.CallFuncResult CF_EndPrint(HelionACS.ThreadHandle thread, ReadOnlySpan<uint> args) {
         var threadInfo = thread.GetThreadInfo();
         Assert.Equal(512, threadInfo.Activator);
         printBufferOutput.Add(thread.GetPrintBuf());
         return HelionACS.CallFuncResult.NextOp;
     }
-    public HelionACS.CallFuncResult CF_TagWait(HelionACS.ThreadHandle thread, uint[] args) {
+    public HelionACS.CallFuncResult CF_TagWait(HelionACS.ThreadHandle thread, ReadOnlySpan<uint> args) {
         Assert.Equal(10u, args[0]);
         thread.MakeTagWait(0, args[0]);
         return HelionACS.CallFuncResult.ReevaluateState;
     }
-    public double CF_GetActorVelX(HelionACS.ThreadHandle thread, uint[] args) {
+    public double CF_GetActorVelX(HelionACS.ThreadHandle thread, ReadOnlySpan<uint> args) {
         if (args[0] == 5) {
             return 24.5;
         } else {
             return 0.0;
         }
     }
-    public HelionACS.CallFuncResult CF_Spawn(HelionACS.ThreadHandle thread, uint[] args) {
+    public HelionACS.CallFuncResult CF_Spawn(HelionACS.ThreadHandle thread, ReadOnlySpan<uint> args) {
         Assert.Equal("something", thread.GetString(args[0]));
         Assert.Equal(1u, args[1]);
         Assert.Equal(2u, args[2]);
@@ -81,7 +82,7 @@ class MyExecutor : HelionACS.Executor {
         thread.PushStack(1);
         return HelionACS.CallFuncResult.NextOp;
     }
-    public HelionACS.CallFuncResult CF_SpawnBroken(HelionACS.ThreadHandle thread, uint[] args) {
+    public HelionACS.CallFuncResult CF_SpawnBroken(HelionACS.ThreadHandle thread, ReadOnlySpan<uint> args) {
         Assert.Equal("something", thread.GetString(args[0]));
         Assert.Equal(1u, args[1]);
         Assert.Equal(2u, args[2]);
