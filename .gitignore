@@ -6,3 +6,4 @@ bin
 **/obj
 build-native
 src/cs/Generated
+.vs/
