@@ -171,7 +171,7 @@ jobs:
           SHORT_SHA=$(echo ${{ github.sha }} | cut -c1-7)
           COMMIT_COUNT=$(git rev-list --count HEAD)
           REF_NAME=$(echo ${{ github.ref_name }} | tr '[:upper:]' '[:lower:]' | sed 's#[^a-zA-Z0-9-]#-#g')
-          echo 'PACKAGE_ID="${{ github.repository_owner }}.HelionACS"' >> $GITHUB_ENV
+          echo 'PACKAGE_ID="${{ vars.PACKAGE_NAMESPACE }}.HelionACS"' >> $GITHUB_ENV
           if [ "$REF_NAME" = "main" ]; then
             echo "VERSION=0.1.1-pre.$COMMIT_COUNT+$SHORT_SHA" >> $GITHUB_ENV
           else
