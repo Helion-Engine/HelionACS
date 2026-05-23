@@ -473,4 +473,16 @@ public abstract class Executor
             return Interop.Methods.LoadState(m_executor, hubId, mapId, (sbyte*)filename) != 0;
         }
     }
+
+    public unsafe uint GetTableStringLength()
+    {
+        return Interop.Methods.GetTableStringLength(m_executor);
+    }
+
+    public unsafe string GetTableString(uint index)
+    {
+        sbyte* str;
+        uint length = Interop.Methods.GetTableString(m_executor, index, &str);
+        return Marshal.PtrToStringUTF8((nint)str, (int)length);
+    }
 }

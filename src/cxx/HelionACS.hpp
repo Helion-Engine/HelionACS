@@ -71,3 +71,5 @@ HELIONACS_API std::int32_t GetThreadActivator(ACSVM::Thread* thread);
 HELIONACS_API void PushThreadStack(ACSVM::Thread* thread, ACSVM::Word value);
 HELIONACS_API ACSVM::Word GetThreadStack(ACSVM::Thread* thread, ACSVM::Word index);
 HELIONACS_API ACSVM::Word GetString(ACSVM::Thread* thread, ACSVM::Word index, const char** str);
+HELIONACS_API ACSVM::Word GetTableStringLength(Executor* executor);
+HELIONACS_API ACSVM::Word GetTableString(Executor* executor, ACSVM::Word index, const char** str);

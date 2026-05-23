@@ -103,6 +103,9 @@ namespace ACSVM
 
       String *getString(Word idx) {return &stringTable[~idx];}
 
+      size_t getStringTableLength() { return stringTable.size(); }
+      String* getStringFromTable(Word idx) { return &stringTable[idx]; }
+
       String *getString(char const *first, char const *last)
          {return &stringTable[{first, last}];}
 

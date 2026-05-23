@@ -218,6 +218,15 @@ public:
         this->env.addFuncDataACS0(code, callFunc);
     }
 
+    size_t GetTableStringLength() {
+        return this->env.getStringTableLength();
+    }
+
+    ACSVM::String* GetTableString(ACSVM::Word index) {
+        return this->env.getStringFromTable(index);
+    }
+
+
     bool SaveState(char* toFile) {
         std::ofstream file(toFile, std::ios::binary);
         if (!file)
@@ -365,4 +374,14 @@ ACSVM::Word GetString(ACSVM::Thread* thread, ACSVM::Word index, const char** str
     auto mapString = thread->scopeMap->getString(index);
     *str = mapString->str;
     return mapString->len;
+}
+
+ACSVM::Word GetTableStringLength(Executor* executor) {
+    return executor->GetTableStringLength();
+}
+
+ACSVM::Word GetTableString(Executor* executor, ACSVM::Word index, const char** str) {
+    auto tableString = executor->GetTableString(index);
+    *str = tableString->str;
+    return tableString->len;
 }
