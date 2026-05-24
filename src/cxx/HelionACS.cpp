@@ -20,12 +20,17 @@
 class IndexThreadInfo : public ACSVM::ThreadInfo {
 public:
     std::int32_t activator;
-    IndexThreadInfo(CSThreadInfo ti) : activator(ti.activator) {}
+    std::int32_t line;
+    std::int32_t side;
+    std::int32_t polyobj;
+    IndexThreadInfo() : activator(-1), line(-1), side(-1), polyobj(-1) {}
+    IndexThreadInfo(CSThreadInfo ti) : activator(ti.activator), line(ti.line), side(ti.side), polyobj(ti.polyobj) {}
 };
 
 class ThreadImpl : public ACSVM::Thread {
 private:
-    IndexThreadInfo info{ {-1} };
+    static constexpr int ArgCount = 4;
+    IndexThreadInfo info;
 
 public:
     void* executorContext;
@@ -41,17 +46,30 @@ public:
     void stop() override {
         ACSVM::Thread::stop();
         this->info.activator = -1;
+        this->info.line = -1;
+        this->info.side = -1;
+        this->info.polyobj = -1;
     }
     const ACSVM::ThreadInfo* getInfo() const override {
         return &this->info;
     }
     void loadState(ACSVM::Serial &in) override {
         ACSVM::Thread::loadState(in);
+        auto count = ACSVM::ReadVLN<ACSVM::Word>(in);
+        if (count != ArgCount)
+            throw ACSVM::ReadError("Unexpected thread state arg count");
         info.activator = (int32_t)ACSVM::ReadVLN<ACSVM::Word>(in);
+        info.line = (int32_t)ACSVM::ReadVLN<ACSVM::Word>(in);
+        info.side = (int32_t)ACSVM::ReadVLN<ACSVM::Word>(in);
+        info.polyobj = (int32_t)ACSVM::ReadVLN<ACSVM::Word>(in);
     }
     void saveState(ACSVM::Serial &out) const override {
         ACSVM::Thread::saveState(out);
+        ACSVM::WriteVLN<ACSVM::Word>(out, (ACSVM::Word)ArgCount);
         ACSVM::WriteVLN<ACSVM::Word>(out, (ACSVM::Word)info.activator);
+        ACSVM::WriteVLN<ACSVM::Word>(out, (ACSVM::Word)info.line);
+        ACSVM::WriteVLN<ACSVM::Word>(out, (ACSVM::Word)info.side);
+        ACSVM::WriteVLN<ACSVM::Word>(out, (ACSVM::Word)info.polyobj);
     }
 };
 
@@ -362,6 +380,15 @@ void* GetThreadContext(ACSVM::Thread* thread) {
 }
 std::int32_t GetThreadActivator(ACSVM::Thread* thread) {
     return static_cast<const IndexThreadInfo*>(thread->getInfo())->activator;
+}
+std::int32_t GetThreadLine(ACSVM::Thread* thread) {
+    return static_cast<const IndexThreadInfo*>(thread->getInfo())->line;
+}
+std::int32_t GetThreadSide(ACSVM::Thread* thread) {
+    return static_cast<const IndexThreadInfo*>(thread->getInfo())->side;
+}
+std::int32_t GetThreadPolyObj(ACSVM::Thread* thread) {
+    return static_cast<const IndexThreadInfo*>(thread->getInfo())->polyobj;
 }
 void PushThreadStack(ACSVM::Thread *thread, ACSVM::Word value) {
     thread->dataStk.push(value);

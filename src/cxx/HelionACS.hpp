@@ -15,6 +15,9 @@ using CallSpecImplCallback = ACSVM::Word(*)(void* context, ACSVM::Thread* thread
 using CheckTagCallback = bool(*)(void* context, ACSVM::Word type, ACSVM::Word tag);
 struct ThreadInfoSerialized {
 	int32_t activator;
+    int32_t line;
+    int32_t side;
+    int32_t polyobj;
 };
 
 struct Callbacks {
@@ -28,6 +31,9 @@ class Executor;
 HELIONACS_API Executor* MakeExecutor(Callbacks callbacks, void* executorContext);
 struct CSThreadInfo {
     int32_t activator;
+    int32_t line;
+    int32_t side;
+    int32_t polyobj;
 };
 HELIONACS_API void LoadHubMap(
     Executor* executor,
@@ -68,6 +74,9 @@ HELIONACS_API void GetThreadPrintBuffer(ACSVM::Thread* thread, const char** buf,
 HELIONACS_API void AppendThreadPrintBuffer(ACSVM::Thread* thread, const char* buf, std::size_t length);
 HELIONACS_API void* GetThreadContext(ACSVM::Thread* thread);
 HELIONACS_API std::int32_t GetThreadActivator(ACSVM::Thread* thread);
+HELIONACS_API std::int32_t GetThreadLine(ACSVM::Thread* thread);
+HELIONACS_API std::int32_t GetThreadSide(ACSVM::Thread* thread);
+HELIONACS_API std::int32_t GetThreadPolyObj(ACSVM::Thread* thread);
 HELIONACS_API void PushThreadStack(ACSVM::Thread* thread, ACSVM::Word value);
 HELIONACS_API ACSVM::Word GetThreadStack(ACSVM::Thread* thread, ACSVM::Word index);
 HELIONACS_API ACSVM::Word GetString(ACSVM::Thread* thread, ACSVM::Word index, const char** str);

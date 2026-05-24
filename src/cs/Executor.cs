@@ -24,7 +24,7 @@ public enum ScriptType : uint {
     Reopen      = 18,
 };
 
-public record struct ThreadInfoData(int Activator);
+public record struct ThreadInfoData(int Activator, int Line, int Side, int PolyObj);
 
 public class StackUnderflowException : Exception {}
 
@@ -81,7 +81,10 @@ public readonly ref struct ThreadHandle
     public unsafe ThreadInfoData GetThreadInfo()
     {
         var activator = Interop.Methods.GetThreadActivator(m_ptr);
-        return new ThreadInfoData(activator);
+        var line = Interop.Methods.GetThreadLine(m_ptr);
+        var side = Interop.Methods.GetThreadSide(m_ptr);
+        var polyobj = Interop.Methods.GetThreadPolyObj(m_ptr);
+        return new ThreadInfoData(activator, line, side, polyobj);
     }
 
     public unsafe void PushStack(uint value)
@@ -358,6 +361,9 @@ public abstract class Executor
         return new Interop.CSThreadInfo
         {
             activator = threadInfo.Activator,
+            line = threadInfo.Line,
+            side = threadInfo.Side,
+            polyobj = threadInfo.PolyObj
         };
     }
 

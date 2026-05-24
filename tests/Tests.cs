@@ -57,6 +57,9 @@ class MyExecutor : HelionACS.Executor {
     public HelionACS.CallFuncResult CF_EndPrint(HelionACS.ThreadHandle thread, ReadOnlySpan<uint> args) {
         var threadInfo = thread.GetThreadInfo();
         Assert.Equal(512, threadInfo.Activator);
+        Assert.Equal(420, threadInfo.Line);
+        Assert.Equal(69, threadInfo.Side);
+        Assert.Equal(-1, threadInfo.PolyObj);
         printBufferOutput.Add(thread.GetPrintBuf());
         return HelionACS.CallFuncResult.NextOp;
     }
@@ -96,7 +99,7 @@ class MyExecutor : HelionACS.Executor {
 
 public class ExecutorTests
 {
-    private static readonly HelionACS.ThreadInfoData DefaultThreadInfo = new(512);
+    private static readonly HelionACS.ThreadInfoData DefaultThreadInfo = new(512, 420, 69, -1);
     readonly MyExecutor executor; 
     public ExecutorTests()
     {
