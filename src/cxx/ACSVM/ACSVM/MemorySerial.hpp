@@ -2,7 +2,7 @@
 #define ACSVM__MemorySerial_H__
 
 #include "Serial.hpp"
-#include "ACSVM/ACSVM/Error.hpp"
+#include "Error.hpp"
 
 namespace ACSVM
 {
