@@ -408,7 +408,7 @@ void AppendThreadPrintBuffer(ACSVM::Thread* thread, const char* buf, std::size_t
     thread->printBuf.reserve(length);
     thread->printBuf.put(buf);
 }
-void* GetThreadContext(ACSVM::Thread* thread) {
+void* GetACSThreadContext(ACSVM::Thread* thread) {
     return static_cast<const ThreadImpl*>(thread)->executorContext;
 }
 std::int32_t GetThreadActivator(ACSVM::Thread* thread) {

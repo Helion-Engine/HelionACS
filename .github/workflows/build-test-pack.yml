@@ -80,7 +80,7 @@ jobs:
         run: cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=Release
       - name: Configure CMake (Windows)
         if: runner.os == 'Windows'
-        run: cmake -B build -G "Visual Studio 17 2022" -A x64
+        run: cmake -B build -G "Visual Studio 17 2022" -A x64 -DCMAKE_MSVC_RUNTIME_LIBRARY=MultiThreaded
       - name: Build native (Linux/macOS)
         if: runner.os != 'Windows'
         run: cmake --build build
