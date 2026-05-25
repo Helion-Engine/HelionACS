@@ -480,6 +480,28 @@ public abstract class Executor
         }
     }
 
+    public unsafe bool SaveStateToBuffer(byte[] buffer, out int requiredSize)
+    {
+        requiredSize = 0;
+        nuint outSize = 0;
+        bool success;
+        fixed (byte* bufferBytes = &buffer[0])
+        {
+            success = Interop.Methods.SaveStateToBuffer(m_executor, (sbyte*)bufferBytes, (nuint)buffer.Length, &outSize) != 0;
+        }
+
+        requiredSize = (int)outSize;
+        return success;
+    }
+
+    public unsafe bool LoadStateFromBuffer(uint hubId, uint mapId, ReadOnlyMemory<byte> buffer)
+    {
+        fixed (byte* bufferBytes = &MemoryMarshal.GetReference(buffer.Span))
+        {
+            return Interop.Methods.LoadStateFromBuffer(m_executor, hubId, mapId, (sbyte*)bufferBytes, (nuint)buffer.Length) != 0;
+        }
+    }
+
     public unsafe uint GetTableStringLength()
     {
         return Interop.Methods.GetTableStringLength(m_executor);

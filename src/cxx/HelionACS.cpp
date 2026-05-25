@@ -10,6 +10,7 @@
 #include "ACSVM/ACSVM/Action.hpp"
 #include "ACSVM/ACSVM/Serial.hpp"
 #include "ACSVM/ACSVM/SerialSTD.hpp"
+#include "ACSVM/ACSVM/MemorySerial.hpp"
 #include "ACSVM/ACSVM/Error.hpp"
 #include "ACSVM/ACSVM/Stack.hpp"
 #include <cstddef>
@@ -57,7 +58,7 @@ public:
         ACSVM::Thread::loadState(in);
         auto count = ACSVM::ReadVLN<ACSVM::Word>(in);
         if (count != ArgCount)
-            throw ACSVM::ReadError("Unexpected thread state arg count");
+            throw ACSVM::SerialError("Unexpected thread state arg count");
         info.activator = (int32_t)ACSVM::ReadVLN<ACSVM::Word>(in);
         info.line = (int32_t)ACSVM::ReadVLN<ACSVM::Word>(in);
         info.side = (int32_t)ACSVM::ReadVLN<ACSVM::Word>(in);
@@ -279,6 +280,32 @@ public:
             return false;
         }
     }
+    bool SaveStateToBuffer(char* buffer, size_t bufferSize, size_t* outSize) {
+        ACSVM::MemorySerial serial(buffer, bufferSize);
+        serial.saveHead();
+        this->env.saveState(serial);
+        serial.saveTail();
+
+        *outSize = serial.position();
+        return !serial.hasFailed();
+    }
+    bool LoadStateFromBuffer(ACSVM::Word hubId, ACSVM::Word mapId, char* buffer, size_t bufferSize) {
+        ACSVM::MemorySerial serial(buffer, bufferSize);
+        try
+        {
+            serial.loadHead();
+            this->env.loadState(serial);
+            auto global = this->env.getGlobalScope(0);
+            this->env.currentHubScope = global->getHubScope(hubId);
+            this->env.currentMapScope = this->env.currentHubScope->getMapScope(mapId);
+            serial.loadTail();
+            return true;
+        }
+        catch (ACSVM::SerialError& e)
+        {
+            return false;
+        }
+    }
 };
 
 ModuleData MakeModuleData(std::size_t length) {
@@ -349,6 +376,12 @@ bool SaveState(Executor* executor, char* toFile) {
 }
 bool LoadState(Executor* executor, ACSVM::Word hubId, ACSVM::Word mapId, char* fromFile) {
     return executor->LoadState(hubId, mapId, fromFile);
+}
+bool SaveStateToBuffer(Executor* executor, char* buffer, size_t bufferSize, size_t* outSize) {
+    return executor->SaveStateToBuffer(buffer, bufferSize, outSize);
+}
+bool LoadStateFromBuffer(Executor* executor, ACSVM::Word hubId, ACSVM::Word mapId, char* buffer, size_t bufferSize) {
+    return executor->LoadStateFromBuffer(hubId, mapId, buffer, bufferSize);
 }
 ACSVM::Word AddCallFunc(Executor* executor, void* funcContext, CallFunc callFunc) {
     return executor->AddCallFunc(funcContext, callFunc);

@@ -64,6 +64,8 @@ HELIONACS_API bool HasActiveThread(Executor* executor);
 HELIONACS_API ExecError Exec(Executor* executor);
 HELIONACS_API bool SaveState(Executor * executor, char* toFile);
 HELIONACS_API bool LoadState(Executor * executor, ACSVM::Word hubId, ACSVM::Word mapId, char* fromFile);
+HELIONACS_API bool SaveStateToBuffer(Executor* executor, char* buffer, size_t bufferSize, size_t* outSize);
+HELIONACS_API bool LoadStateFromBuffer(Executor* executor, ACSVM::Word hubId, ACSVM::Word mapId, char* buffer, size_t bufferSize);
 
 using CallFunc = bool (*)(void* funcContext, ACSVM::Thread *thread, ACSVM::Word const *argv, ACSVM::Word argc);
 HELIONACS_API ACSVM::Word AddCallFunc(Executor* executor, void* funcContext, CallFunc callFunc);
