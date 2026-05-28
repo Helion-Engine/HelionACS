@@ -212,7 +212,7 @@ public:
     template<typename T>
     bool ScriptPause(T scriptId, ACSVM::Word hubId, ACSVM::Word mapId) {
         if (this->env.currentMapScope == nullptr) { return false; }
-        return this->env.currentMapScope->scriptStop(this->GetScriptName(scriptId), this->GetScope(hubId, mapId));
+        return this->env.currentMapScope->scriptPause(this->GetScriptName(scriptId), this->GetScope(hubId, mapId));
     }
 
     bool HasActiveThread() {
