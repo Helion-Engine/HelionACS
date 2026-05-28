@@ -369,60 +369,53 @@ public abstract class Executor
             return Interop.Methods.ScriptStartTypeForced(m_executor, (uint)type, argV, (nuint)args.Length, MakeCSThreadInfo(threadInfo));
     }
 
-    unsafe private static T AdaptScriptName<T>(string name, Func<nuint, T> toCall)
-    {
-        var nameBytes = Buffers.GetUtf8Buffer(name);
-        fixed (byte* namePtr = nameBytes)
-            return toCall((nuint)namePtr);
-    }
-
-    unsafe private static T AdaptScriptArgs<T>(uint[] args, Func<nuint, T> toCall)
-    {
-        fixed (uint* argV = args)
-            return toCall((nuint)argV);
-    }
-
-    unsafe private static T AdaptScriptNameAndArgs<T>(string name, uint[] args, Func<nuint, nuint, T> toCall)
-    {
-        var nameBytes = Buffers.GetUtf8Buffer(name);
-        fixed (byte* namePtr = nameBytes)
-            fixed (uint* argV = args)
-                return toCall((nuint)namePtr, (nuint)argV);
-    }
-
     public unsafe bool ScriptStart(string name, uint hubId, uint mapId, uint[] args, ThreadInfoData threadInfo)
     {
-        return AdaptScriptNameAndArgs(name, args, (s, a) => Interop.Methods.ScriptStartName(m_executor, (sbyte*)s, hubId, mapId, (uint*)a, (nuint)args.Length, MakeCSThreadInfo(threadInfo))) != 0;
+        var nameBytes = Buffers.GetUtf8BufferStatic(name);
+        fixed (byte* namePtr = nameBytes)
+        fixed (uint* argV = args)
+            return Interop.Methods.ScriptStartName(m_executor, (sbyte*)namePtr, hubId, mapId, (uint*)argV, (nuint)args.Length, MakeCSThreadInfo(threadInfo)) != 0;
     }
 
     public unsafe bool ScriptStart(uint num, uint hubId, uint mapId, uint[] args, ThreadInfoData threadInfo)
     {
-        return AdaptScriptArgs(args, a => Interop.Methods.ScriptStartNum(m_executor, num, hubId, mapId, (uint*)a, (nuint)args.Length, MakeCSThreadInfo(threadInfo)) != 0);
+        fixed (uint* argV = args)
+            return Interop.Methods.ScriptStartNum(m_executor, num, hubId, mapId, (uint*)argV, (nuint)args.Length, MakeCSThreadInfo(threadInfo)) != 0;
     }
 
     public unsafe bool ScriptStartForced(string name, uint hubId, uint mapId, uint[] args, ThreadInfoData threadInfo)
     {
-        return AdaptScriptNameAndArgs(name, args, (s, a) => Interop.Methods.ScriptStartForcedName(m_executor, (sbyte*)s, hubId, mapId, (uint*)a, (nuint)args.Length, MakeCSThreadInfo(threadInfo))) != 0;
+        var nameBytes = Buffers.GetUtf8BufferStatic(name);
+        fixed (byte* namePtr = nameBytes)
+        fixed (uint* argV = args)
+            return Interop.Methods.ScriptStartForcedName(m_executor, (sbyte*)namePtr, hubId, mapId, (uint*)argV, (nuint)args.Length, MakeCSThreadInfo(threadInfo)) != 0;
     }
 
     public unsafe bool ScriptStartForced(uint num, uint hubId, uint mapId, uint[] args, ThreadInfoData threadInfo)
     {
-        return AdaptScriptArgs(args, a => Interop.Methods.ScriptStartForcedNum(m_executor, num, hubId, mapId, (uint*)a, (nuint)args.Length, MakeCSThreadInfo(threadInfo)) != 0);
+        fixed (uint* argV = args)
+            return Interop.Methods.ScriptStartForcedNum(m_executor, num, hubId, mapId, (uint*)argV, (nuint)args.Length, MakeCSThreadInfo(threadInfo)) != 0;
     }
 
     public unsafe uint ScriptStartResult(string name, uint[] args, ThreadInfoData threadInfo)
     {
-        return AdaptScriptNameAndArgs(name, args, (s, a) => Interop.Methods.ScriptStartResultName(m_executor, (sbyte*)s, (uint*)a, (nuint)args.Length, MakeCSThreadInfo(threadInfo)));
+        var nameBytes = Buffers.GetUtf8BufferStatic(name);
+        fixed (byte* namePtr = nameBytes)
+        fixed (uint* argV = args)
+            return Interop.Methods.ScriptStartResultName(m_executor, (sbyte*)namePtr, (uint*)argV, (nuint)args.Length, MakeCSThreadInfo(threadInfo));
     }
 
     public unsafe uint ScriptStartResult(uint num, uint[] args, ThreadInfoData threadInfo)
     {
-        return AdaptScriptArgs(args, a => Interop.Methods.ScriptStartResultNum(m_executor, num, (uint*)a, (nuint)args.Length, MakeCSThreadInfo(threadInfo)));
+        fixed (uint* argV = args)
+            return Interop.Methods.ScriptStartResultNum(m_executor, num, (uint*)argV, (nuint)args.Length, MakeCSThreadInfo(threadInfo));
     }
 
     public unsafe bool ScriptStop(string name, uint hubId, uint mapId)
     {
-        return AdaptScriptName(name, s => Interop.Methods.ScriptStopName(m_executor, (sbyte*)s, hubId, mapId)) != 0;
+        var nameBytes = Buffers.GetUtf8BufferStatic(name);
+        fixed (byte* namePtr = nameBytes)
+            return Interop.Methods.ScriptStopName(m_executor, (sbyte*)namePtr, hubId, mapId) != 0;
     }
 
     public unsafe bool ScriptStop(uint num, uint hubId, uint mapId)
@@ -432,7 +425,9 @@ public abstract class Executor
 
     public unsafe bool ScriptPause(string name, uint hubId, uint mapId)
     {
-        return AdaptScriptName(name, s => Interop.Methods.ScriptPauseName(m_executor, (sbyte*)s, hubId, mapId)) != 0;
+        var nameBytes = Buffers.GetUtf8BufferStatic(name);
+        fixed (byte* namePtr = nameBytes)
+            return Interop.Methods.ScriptPauseName(m_executor, (sbyte*)namePtr, hubId, mapId) != 0;
     }
 
     public unsafe bool ScriptPause(uint num, uint hubId, uint mapId)
