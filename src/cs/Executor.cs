@@ -327,32 +327,22 @@ public abstract class Executor
         throw new NotImplementedException();
     }
 
-    public void LoadHubMap(uint hubId, uint mapId, string[] moduleNames)
+    public unsafe void LoadHubMap(uint hubId, uint mapId, string[] moduleNames)
     {
-        var moduleNamesC = Array.ConvertAll(
-            moduleNames,
-            s => {
-                var bytes = Buffers.GetUtf8Buffer(s);
-                var mem = Marshal.AllocHGlobal(bytes.Length);
-                Marshal.Copy(bytes, 0, mem, bytes.Length);
-                return mem;
+        var utf8Buffers = new byte[moduleNames.Length][];
+        var ptrs = new byte*[moduleNames.Length];
+        for (int i = 0; i < moduleNames.Length; i++)
+            utf8Buffers[i] = Buffers.GetUtf8Buffer(moduleNames[i]);
+
+        fixed (byte** ptrArray = ptrs)
+        {
+            for (int i = 0; i < utf8Buffers.Length; i++)
+            {
+                fixed (byte* p = utf8Buffers[i])
+                    ptrArray[i] = p;
             }
-        ).ToArray();
-        try {
-            unsafe {
-                fixed (nint* moduleNamesPtr = moduleNamesC) {
-                    Interop.Methods.LoadHubMap(
-                        m_executor,
-                        hubId,
-                        mapId,
-                        (sbyte**)moduleNamesPtr, (nuint)moduleNamesC.Length
-                    );
-                }
-            }
-        } finally {
-            foreach (var ptr in moduleNamesC) {
-                Marshal.FreeHGlobal(ptr);
-            }
+
+            Interop.Methods.LoadHubMap(m_executor, hubId, mapId, (sbyte**)ptrArray, (nuint)utf8Buffers.Length);
         }
     }
 
