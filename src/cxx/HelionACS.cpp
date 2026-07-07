@@ -148,30 +148,22 @@ public:
             this->env.currentHubScope = nullptr;
             env.currentMapScope = nullptr;
         }
-        _CrtCheckMemory();
         this->env.currentHubScope = global->getHubScope(hubId);
-        _CrtCheckMemory();
         this->env.currentHubScope->active = true;
         if (this->env.currentMapScope != nullptr && this->env.currentMapScope->id != mapId) {
             this->env.currentMapScope->active = false;
             this->env.currentMapScope = nullptr;
         }
-        _CrtCheckMemory();
         this->env.currentMapScope = this->env.currentHubScope->getMapScope(mapId);
-        _CrtCheckMemory();
         this->env.currentMapScope->active = true;
 
         if (!this->env.currentMapScope->hasModules()) {
             auto modules = std::vector<ACSVM::Module *> {};
             for (const auto& n : moduleNames) {
-                _CrtCheckMemory();
                 modules.push_back(this->env.getModule(env.getModuleName(n)));
-                _CrtCheckMemory();
                 auto module = this->env.getModule(env.getModuleName(n));
             }
-            _CrtCheckMemory();
             this->env.currentMapScope->addModules(modules.data(), modules.size());
-            _CrtCheckMemory();
         }
     }
 
