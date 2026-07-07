@@ -29,6 +29,7 @@ struct Callbacks {
 class Executor;
 
 HELIONACS_API Executor* MakeExecutor(Callbacks callbacks, void* executorContext);
+HELIONACS_API void FreeExecutor(Executor* executor);
 struct CSThreadInfo {
     int32_t activator;
     int32_t line;

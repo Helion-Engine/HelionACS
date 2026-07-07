@@ -13,6 +13,7 @@
 #include "ACSVM/ACSVM/MemorySerial.hpp"
 #include "ACSVM/ACSVM/Error.hpp"
 #include "ACSVM/ACSVM/Stack.hpp"
+#include "CrtDebug.hpp"
 #include <cstddef>
 #include <span>
 #include <string_view>
@@ -88,6 +89,7 @@ public:
     void loadModule(ACSVM::Module *module) override {
         auto data = this->callbacks.loadModuleCallback(this->executorContext, module->name.s->str, module->name.s->len);
         module->readBytecode(data.data, data.length);
+        delete[] data.data;
     }
     ACSVM::Word callSpecImpl(ACSVM::Thread *thread, ACSVM::Word spec, const ACSVM::Word *argV, ACSVM::Word argC) override {
         return this->callbacks.callSpecImplCallback(this->executorContext, thread, spec, argV, argC);
@@ -131,7 +133,8 @@ public:
     Executor(Callbacks callbacks, void* executorContext) : env(callbacks, executorContext) {}
 
     void LoadHubMap(ACSVM::Word hubId, ACSVM::Word mapId, std::span<const char*> moduleNames) {
-        auto global = env.getGlobalScope(0); global->active = true;
+        auto global = env.getGlobalScope(0);
+        global->active = true;
 
         if (
             hubId != 0
@@ -145,31 +148,41 @@ public:
             this->env.currentHubScope = nullptr;
             env.currentMapScope = nullptr;
         }
-        this->env.currentHubScope = global->getHubScope(hubId); this->env.currentHubScope->active = true;
+        _CrtCheckMemory();
+        this->env.currentHubScope = global->getHubScope(hubId);
+        _CrtCheckMemory();
+        this->env.currentHubScope->active = true;
         if (this->env.currentMapScope != nullptr && this->env.currentMapScope->id != mapId) {
             this->env.currentMapScope->active = false;
             this->env.currentMapScope = nullptr;
         }
-        this->env.currentMapScope = this->env.currentHubScope->getMapScope(mapId); this->env.currentMapScope->active = true;
+        _CrtCheckMemory();
+        this->env.currentMapScope = this->env.currentHubScope->getMapScope(mapId);
+        _CrtCheckMemory();
+        this->env.currentMapScope->active = true;
 
         if (!this->env.currentMapScope->hasModules()) {
             auto modules = std::vector<ACSVM::Module *> {};
             for (const auto& n : moduleNames) {
+                _CrtCheckMemory();
                 modules.push_back(this->env.getModule(env.getModuleName(n)));
+                _CrtCheckMemory();
                 auto module = this->env.getModule(env.getModuleName(n));
             }
+            _CrtCheckMemory();
             this->env.currentMapScope->addModules(modules.data(), modules.size());
+            _CrtCheckMemory();
         }
     }
 
-    ACSVM::MapScope::ScriptStartInfo MakeInfo(CSThreadInfo info, ACSVM::Word* argV, std::size_t argC) {
+    ACSVM::MapScope::ScriptStartInfo MakeInfo(IndexThreadInfo* indexThreadInfo, ACSVM::Word* argV, std::size_t argC) {
         auto actualInfo = ACSVM::MapScope::ScriptStartInfo {};
         actualInfo.argV = argV;
         actualInfo.argC = argC;
-        auto threadInfo = new IndexThreadInfo(info);
-        actualInfo.info = threadInfo;
+		actualInfo.info = indexThreadInfo;
         return actualInfo;
     }
+
     ACSVM::ScriptName GetScriptName(ACSVM::Word scriptId) {
         return ACSVM::ScriptName(scriptId);
     }
@@ -183,26 +196,31 @@ public:
 
     ACSVM::Word ScriptStartType(ACSVM::Word type, ACSVM::Word* argV, std::size_t argC, CSThreadInfo info) {
         if (this->env.currentMapScope == nullptr) { return 0; }
-        return this->env.currentMapScope->scriptStartType(type, this->MakeInfo(info, argV, argC));
+        IndexThreadInfo indexThreadInfo(info);
+        return this->env.currentMapScope->scriptStartType(type, this->MakeInfo(&indexThreadInfo, argV, argC));
     }
     ACSVM::Word ScriptStartTypeForced(ACSVM::Word type, ACSVM::Word* argV, std::size_t argC, CSThreadInfo info) {
         if (this->env.currentMapScope == nullptr) { return 0; }
-        return this->env.currentMapScope->scriptStartTypeForced(type, this->MakeInfo(info, argV, argC));
+        IndexThreadInfo indexThreadInfo(info);
+        return this->env.currentMapScope->scriptStartTypeForced(type, this->MakeInfo(&indexThreadInfo, argV, argC));
     }
     template<typename T>
     bool ScriptStart(T scriptId, ACSVM::Word hubId, ACSVM::Word mapId, ACSVM::Word* argV, std::size_t argC, CSThreadInfo info) {
         if (this->env.currentMapScope == nullptr) { return false; }
-        return this->env.currentMapScope->scriptStart(this->GetScriptName(scriptId), this->GetScope(hubId, mapId), this->MakeInfo(info, argV, argC));
+        IndexThreadInfo indexThreadInfo(info);
+        return this->env.currentMapScope->scriptStart(this->GetScriptName(scriptId), this->GetScope(hubId, mapId), this->MakeInfo(&indexThreadInfo, argV, argC));
     }
     template<typename T>
     bool ScriptStartForced(T scriptId, ACSVM::Word hubId, ACSVM::Word mapId, ACSVM::Word* argV, std::size_t argC, CSThreadInfo info) {
         if (this->env.currentMapScope == nullptr) { return false; }
-        return this->env.currentMapScope->scriptStartForced(this->GetScriptName(scriptId), this->GetScope(hubId, mapId), this->MakeInfo(info, argV, argC));
+        IndexThreadInfo indexThreadInfo(info);
+        return this->env.currentMapScope->scriptStartForced(this->GetScriptName(scriptId), this->GetScope(hubId, mapId), this->MakeInfo(&indexThreadInfo, argV, argC));
     }
     template<typename T>
     ACSVM::Word ScriptStartResult(T scriptId, ACSVM::Word* argV, std::size_t argC, CSThreadInfo info) {
         if (this->env.currentMapScope == nullptr) { return 0; }
-        return this->env.currentMapScope->scriptStartResult(this->GetScriptName(scriptId), this->MakeInfo(info, argV, argC));
+        IndexThreadInfo indexThreadInfo(info);
+        return this->env.currentMapScope->scriptStartResult(this->GetScriptName(scriptId), this->MakeInfo(&indexThreadInfo, argV, argC));
     }
     template<typename T>
     bool ScriptStop(T scriptId, ACSVM::Word hubId, ACSVM::Word mapId) {
@@ -309,14 +327,18 @@ public:
 };
 
 ModuleData MakeModuleData(std::size_t length) {
-    ModuleData ret;
+    ModuleData ret{};
     ret.data = (length != 0) ? (new ACSVM::Byte[length] { 0 }) : nullptr;
     ret.length = length;
     return ret;
 }
 
 Executor* MakeExecutor(Callbacks callbacks, void* executorContext) {
+    CrtDebugInit();
     return new Executor(callbacks, executorContext);
+}
+void FreeExecutor(Executor* executor) {
+    delete executor;
 }
 void LoadHubMap(
     Executor* executor,
