@@ -127,7 +127,7 @@ public readonly ref struct ThreadHandle
     }
 }
 
-public abstract class Executor
+public abstract class Executor : IDisposable
 {
     const int FixedBits = 16;
     const int FixedOne = 1 << FixedBits;
@@ -142,6 +142,7 @@ public abstract class Executor
 
     unsafe readonly protected Interop.Executor* m_executor;
     private readonly List<GCHandle> m_handles;
+    private bool m_disposed;
 
     public unsafe Executor()
     {
@@ -155,12 +156,22 @@ public abstract class Executor
         m_executor = Interop.Methods.MakeExecutor(callbacks, (void*)GCHandle.ToIntPtr(selfHandle));
     }
 
-    ~Executor()
+    public void Dispose()
     {
+        PerformDispose();
+        GC.SuppressFinalize(this);
+    }
+
+    protected unsafe void PerformDispose()
+    {
+        if (m_disposed)
+            return;
+
+        Interop.Methods.FreeExecutor(m_executor);
         foreach (var handle in m_handles)
-        {
             handle.Free();
-        }
+
+        m_disposed = true;
     }
 
     protected GCHandle AddHandle(object obj) {

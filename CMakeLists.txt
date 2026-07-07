@@ -1,5 +1,12 @@
 cmake_minimum_required(VERSION 3.16)
 
+if (MSVC)
+    set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS ON)
+    set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} /Zi /Od")
+    set(CMAKE_SHARED_LINKER_FLAGS_DEBUG "${CMAKE_SHARED_LINKER_FLAGS_DEBUG} /DEBUG")
+    set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>DLL")
+endif()
+
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
@@ -29,6 +36,7 @@ set(SOURCES
     src/cxx/ACSVM/ACSVM/Thread.cpp
     src/cxx/ACSVM/ACSVM/ThreadExec.cpp
     src/cxx/ACSVM/ACSVM/Tracer.cpp
+    src/cxx/CrtDebug.cpp
 )
 
 add_library(HelionACS-obj OBJECT ${SOURCES})
