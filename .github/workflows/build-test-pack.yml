@@ -54,7 +54,7 @@ jobs:
             dyn-dest: libHelionACS-native.so
             static-src: libHelionACS-native-static.a
             static-dest: libHelionACS-native-static.a
-          - os: macos-26
+          - os: macos-latest
             rid: osx-arm64
             dyn-src: libHelionACS-native.dylib
             dyn-dest: libHelionACS-native.dylib
@@ -108,7 +108,7 @@ jobs:
           - os: ubuntu-latest
             rid: linux-x64
           - os: macos-latest
-            rid: osx-x64
+            rid: osx-arm64
           - os: windows-latest
             rid: win-x64
     steps:
