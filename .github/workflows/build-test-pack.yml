@@ -54,13 +54,13 @@ jobs:
             dyn-dest: libHelionACS-native.so
             static-src: libHelionACS-native-static.a
             static-dest: libHelionACS-native-static.a
-          - os: macos-latest
+          - os: macos-15
             rid: osx-arm64
             dyn-src: libHelionACS-native.dylib
             dyn-dest: libHelionACS-native.dylib
             static-src: libHelionACS-native-static.a
             static-dest: libHelionACS-native-static.a
-          - os: windows-2022
+          - os: windows-2025-vs2026
             rid: win-x64
             dyn-src: Release/HelionACS-native.dll
             dyn-dest: HelionACS-native.dll
